@@ -127,13 +127,13 @@ export default async function YearPage({ params, searchParams }: Props) {
             <div>
               <div className="text-sm text-gray-600">当初予算総額</div>
               <div className="text-xl font-bold">
-                {(statistics.totalBudget / 100000000).toFixed(0)}億円
+                {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
               </div>
             </div>
             <div>
               <div className="text-sm text-gray-600">執行額</div>
               <div className="text-xl font-bold">
-                {(statistics.totalExecution / 100000000).toFixed(0)}億円
+                {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
               </div>
             </div>
             <div>

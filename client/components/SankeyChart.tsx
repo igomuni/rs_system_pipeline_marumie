@@ -16,6 +16,22 @@ export default function SankeyChart({ data, year }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<D3SankeyNode | null>(null);
 
+  // 金額を適切な単位でフォーマット
+  const formatAmount = (amount: number): string => {
+    if (amount >= 1000000000000) {
+      // 1兆円以上
+      return `${(amount / 1000000000000).toFixed(1)}兆円`;
+    } else if (amount >= 100000000) {
+      // 1億円以上
+      return `${(amount / 100000000).toFixed(0)}億円`;
+    } else if (amount >= 10000) {
+      // 1万円以上
+      return `${(amount / 10000).toFixed(0)}万円`;
+    } else {
+      return `${amount.toFixed(0)}円`;
+    }
+  };
+
   useEffect(() => {
     if (!svgRef.current || !containerRef.current || !data || !data.nodes || !data.nodes.length || !data.links || !data.links.length) {
       return;
@@ -144,22 +160,37 @@ export default function SankeyChart({ data, year }: Props) {
     });
 
     // ノードのラベルを描画
-    g.append('g')
-      .attr('class', 'labels')
-      .selectAll('text')
-      .data(graph.nodes)
-      .join('text')
-      .attr('x', (d) => ((d.x0 || 0) < width / 2 ? (d.x1 || 0) + 6 : (d.x0 || 0) - 6))
-      .attr('y', (d) => ((d.y1 || 0) + (d.y0 || 0)) / 2)
-      .attr('dy', '0.35em')
-      .attr('text-anchor', (d) => ((d.x0 || 0) < width / 2 ? 'start' : 'end'))
-      .text((d) => {
-        const name = d.name;
-        return name.length > 20 ? name.substring(0, 20) + '...' : name;
-      })
-      .attr('font-size', 10)
-      .attr('fill', '#333')
-      .style('pointer-events', 'none');
+    const labels = g.append('g').attr('class', 'labels');
+
+    graph.nodes.forEach((d) => {
+      const isLeft = (d.x0 || 0) < width / 2;
+      const x = isLeft ? (d.x1 || 0) + 6 : (d.x0 || 0) - 6;
+      const y = ((d.y1 || 0) + (d.y0 || 0)) / 2;
+      const textAnchor = isLeft ? 'start' : 'end';
+
+      // 名前を表示
+      const name = d.name.length > 20 ? d.name.substring(0, 20) + '...' : d.name;
+      labels.append('text')
+        .attr('x', x)
+        .attr('y', y - 6)
+        .attr('text-anchor', textAnchor)
+        .text(name)
+        .attr('font-size', 10)
+        .attr('fill', '#333')
+        .style('pointer-events', 'none');
+
+      // 金額を表示
+      if (d.value) {
+        labels.append('text')
+          .attr('x', x)
+          .attr('y', y + 6)
+          .attr('text-anchor', textAnchor)
+          .text(formatAmount(d.value))
+          .attr('font-size', 9)
+          .attr('fill', '#666')
+          .style('pointer-events', 'none');
+      }
+    });
   }, [data, year]);
 
   return (

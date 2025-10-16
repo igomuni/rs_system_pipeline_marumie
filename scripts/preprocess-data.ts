@@ -268,7 +268,7 @@ function generateMinistryProjectsData(budgetData: any[], year: Year) {
  * 統計情報を計算
  */
 function calculateStatistics(budgetData: any[], year: Year) {
-  // 対象年度のデータのみをフィルター
+  // 当初予算は予算年度=yearのデータを使用
   const currentYearBudgetData = budgetData.filter((budget) => {
     const budgetYear = budget.予算年度;
     return budgetYear === year;
@@ -279,12 +279,18 @@ function calculateStatistics(budgetData: any[], year: Year) {
     0
   );
 
-  const totalExecution = currentYearBudgetData.reduce(
+  // 執行額は予算年度=year-1のデータを使用（前年度の執行実績）
+  const executionYearBudgetData = budgetData.filter((budget) => {
+    const budgetYear = budget.予算年度;
+    return budgetYear === year - 1;
+  });
+
+  const totalExecution = executionYearBudgetData.reduce(
     (sum, item) => sum + normalizeAmount(item['執行額(合計)'] || item['執行額（合計）'] || 0, year),
     0
   );
 
-  const validRates = currentYearBudgetData.filter((item) => item.執行率);
+  const validRates = executionYearBudgetData.filter((item) => item.執行率);
   const averageExecutionRate =
     validRates.length > 0
       ? validRates.reduce((sum, item) => sum + (item.執行率 || 0), 0) / validRates.length
