@@ -1,0 +1,532 @@
+{
+  "nodes": [
+    {
+      "id": "total_budget",
+      "name": "2024年度予算",
+      "type": "total",
+      "metadata": {
+        "budget": 121141049606724
+      }
+    },
+    {
+      "id": "ministry_0",
+      "name": "厚生労働省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "厚生労働省",
+        "budget": 91802833319000
+      }
+    },
+    {
+      "id": "ministry_1",
+      "name": "国土交通省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "国土交通省",
+        "budget": 5513090394000
+      }
+    },
+    {
+      "id": "ministry_2",
+      "name": "防衛省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "防衛省",
+        "budget": 5457196073725
+      }
+    },
+    {
+      "id": "ministry_3",
+      "name": "こども家庭庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "こども家庭庁",
+        "budget": 5263722335000
+      }
+    },
+    {
+      "id": "ministry_4",
+      "name": "文部科学省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "文部科学省",
+        "budget": 5102315196000
+      }
+    },
+    {
+      "id": "ministry_5",
+      "name": "農林水産省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "農林水産省",
+        "budget": 2165511955000
+      }
+    },
+    {
+      "id": "ministry_6",
+      "name": "経済産業省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "経済産業省",
+        "budget": 1696982864000
+      }
+    },
+    {
+      "id": "ministry_7",
+      "name": "内閣府",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "内閣府",
+        "budget": 531694035000
+      }
+    },
+    {
+      "id": "ministry_8",
+      "name": "外務省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "外務省",
+        "budget": 483783535000
+      }
+    },
+    {
+      "id": "ministry_9",
+      "name": "デジタル庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "デジタル庁",
+        "budget": 481285121000
+      }
+    },
+    {
+      "id": "ministry_10",
+      "name": "復興庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "復興庁",
+        "budget": 459624949000
+      }
+    },
+    {
+      "id": "ministry_11",
+      "name": "財務省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "財務省",
+        "budget": 400100774000
+      }
+    },
+    {
+      "id": "ministry_12",
+      "name": "環境省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "環境省",
+        "budget": 311677889000
+      }
+    },
+    {
+      "id": "ministry_13",
+      "name": "総務省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "総務省",
+        "budget": 282418804000
+      }
+    },
+    {
+      "id": "ministry_14",
+      "name": "林野庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "林野庁",
+        "budget": 210335179000
+      }
+    },
+    {
+      "id": "ministry_15",
+      "name": "法務省",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "法務省",
+        "budget": 168353074000
+      }
+    },
+    {
+      "id": "ministry_16",
+      "name": "国土交通省　海上保安庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "国土交通省　海上保安庁",
+        "budget": 144040487000
+      }
+    },
+    {
+      "id": "ministry_17",
+      "name": "水産庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "水産庁",
+        "budget": 136177986000
+      }
+    },
+    {
+      "id": "ministry_18",
+      "name": "警察庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "警察庁",
+        "budget": 129438009000
+      }
+    },
+    {
+      "id": "ministry_19",
+      "name": "特許庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "特許庁",
+        "budget": 106969363000
+      }
+    },
+    {
+      "id": "ministry_20",
+      "name": "文化庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "文化庁",
+        "budget": 102046050999
+      }
+    },
+    {
+      "id": "ministry_21",
+      "name": "国土交通省　観光庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "国土交通省　観光庁",
+        "budget": 49917288000
+      }
+    },
+    {
+      "id": "ministry_22",
+      "name": "内閣官房",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "内閣官房",
+        "budget": 34731851000
+      }
+    },
+    {
+      "id": "ministry_23",
+      "name": "原子力規制委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "原子力規制委員会",
+        "budget": 32777857000
+      }
+    },
+    {
+      "id": "ministry_24",
+      "name": "スポーツ庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "スポーツ庁",
+        "budget": 31569119000
+      }
+    },
+    {
+      "id": "ministry_25",
+      "name": "国土交通省　気象庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "国土交通省　気象庁",
+        "budget": 12860564000
+      }
+    },
+    {
+      "id": "ministry_26",
+      "name": "消防庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "消防庁",
+        "budget": 9174687000
+      }
+    },
+    {
+      "id": "ministry_27",
+      "name": "消費者庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "消費者庁",
+        "budget": 8773475000
+      }
+    },
+    {
+      "id": "ministry_28",
+      "name": "国税庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "国税庁",
+        "budget": 6614535000
+      }
+    },
+    {
+      "id": "ministry_29",
+      "name": "公正取引委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "公正取引委員会",
+        "budget": 1482236000
+      }
+    },
+    {
+      "id": "ministry_30",
+      "name": "金融庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "金融庁",
+        "budget": 1324401000
+      }
+    },
+    {
+      "id": "ministry_31",
+      "name": "個人情報保護委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "個人情報保護委員会",
+        "budget": 826992000
+      }
+    },
+    {
+      "id": "ministry_32",
+      "name": "公安調査庁",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "公安調査庁",
+        "budget": 808888000
+      }
+    },
+    {
+      "id": "ministry_33",
+      "name": "中央労働委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "中央労働委員会",
+        "budget": 280406000
+      }
+    },
+    {
+      "id": "ministry_34",
+      "name": "国土交通省　運輸安全委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "国土交通省　運輸安全委員会",
+        "budget": 156816000
+      }
+    },
+    {
+      "id": "ministry_35",
+      "name": "カジノ管理委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "カジノ管理委員会",
+        "budget": 103500000
+      }
+    },
+    {
+      "id": "ministry_36",
+      "name": "公害等調整委員会",
+      "type": "ministry",
+      "metadata": {
+        "ministry": "公害等調整委員会",
+        "budget": 49599000
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "total_budget",
+      "target": "ministry_0",
+      "value": 91802833319000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_1",
+      "value": 5513090394000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_2",
+      "value": 5457196073725
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_3",
+      "value": 5263722335000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_4",
+      "value": 5102315196000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_5",
+      "value": 2165511955000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_6",
+      "value": 1696982864000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_7",
+      "value": 531694035000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_8",
+      "value": 483783535000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_9",
+      "value": 481285121000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_10",
+      "value": 459624949000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_11",
+      "value": 400100774000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_12",
+      "value": 311677889000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_13",
+      "value": 282418804000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_14",
+      "value": 210335179000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_15",
+      "value": 168353074000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_16",
+      "value": 144040487000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_17",
+      "value": 136177986000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_18",
+      "value": 129438009000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_19",
+      "value": 106969363000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_20",
+      "value": 102046050999
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_21",
+      "value": 49917288000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_22",
+      "value": 34731851000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_23",
+      "value": 32777857000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_24",
+      "value": 31569119000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_25",
+      "value": 12860564000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_26",
+      "value": 9174687000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_27",
+      "value": 8773475000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_28",
+      "value": 6614535000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_29",
+      "value": 1482236000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_30",
+      "value": 1324401000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_31",
+      "value": 826992000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_32",
+      "value": 808888000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_33",
+      "value": 280406000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_34",
+      "value": 156816000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_35",
+      "value": 103500000
+    },
+    {
+      "source": "total_budget",
+      "target": "ministry_36",
+      "value": 49599000
+    }
+  ]
+}

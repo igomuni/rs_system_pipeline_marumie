@@ -1,0 +1,217 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import * as d3 from 'd3';
+import { sankey, sankeyLinkHorizontal, type SankeyGraph } from 'd3-sankey';
+import type { SankeyData, D3SankeyNode, D3SankeyLink } from '@/types/sankey';
+import type { Year } from '@/types/rs-system';
+
+interface Props {
+  data: SankeyData;
+  year: Year;
+}
+
+export default function SankeyChart({ data, year }: Props) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedNode, setSelectedNode] = useState<D3SankeyNode | null>(null);
+
+  useEffect(() => {
+    if (!svgRef.current || !containerRef.current || !data || !data.nodes || !data.nodes.length || !data.links || !data.links.length) {
+      return;
+    }
+
+    // コンテナのサイズを取得
+    const containerWidth = containerRef.current.offsetWidth;
+    const width = containerWidth;
+    const height = 600;
+    const margin = { top: 20, right: 120, bottom: 20, left: 120 };
+
+    // SVGをクリア
+    d3.select(svgRef.current).selectAll('*').remove();
+
+    // SVGを設定
+    const svg = d3
+      .select(svgRef.current)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('viewBox', [0, 0, width, height]);
+
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // カスタムnodeAlign関数：左側のノード（total）は上揃え、右側は均等配置
+    const customNodeAlign = (node: D3SankeyNode, n: number) => {
+      // nodeがundefinedまたはtypeプロパティがない場合はデフォルト値を返す
+      if (!node || !node.type) {
+        // sankeyJustifyの実装と同じロジック
+        return node.sourceLinks && node.sourceLinks.length ? node.depth || 0 : n - 1;
+      }
+      if (node.type === 'total') {
+        return 0; // 左側のノードは上に配置
+      }
+      // sankeyJustifyの実装と同じロジック
+      return node.sourceLinks && node.sourceLinks.length ? node.depth || 0 : n - 1;
+    };
+
+    // サンキーレイアウトを作成
+    const sankeyGenerator = sankey<D3SankeyNode, D3SankeyLink>()
+      .nodeId((d) => d.id)
+      .nodeWidth(15)
+      .nodePadding(10)
+      .nodeAlign(customNodeAlign)
+      .extent([
+        [0, 0],
+        [width - margin.left - margin.right, height - margin.top - margin.bottom],
+      ]);
+
+    // データを変換
+    const graph: SankeyGraph<D3SankeyNode, D3SankeyLink> = {
+      nodes: data.nodes.map((d) => ({ ...d })),
+      links: data.links.map((d) => ({ ...d })),
+    };
+
+    sankeyGenerator(graph);
+
+    // カラースケール
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // リンクを描画
+    const links = g
+      .append('g')
+      .attr('class', 'links')
+      .selectAll('path')
+      .data(graph.links)
+      .join('path')
+      .attr('d', sankeyLinkHorizontal())
+      .attr('stroke', (d) => {
+        const sourceNode = d.source as D3SankeyNode;
+        return colorScale(sourceNode.metadata?.ministry || sourceNode.name);
+      })
+      .attr('stroke-width', (d) => Math.max(1, d.width || 0))
+      .attr('fill', 'none')
+      .attr('opacity', 0.3)
+      .on('mouseover', function (event, d) {
+        d3.select(this).attr('opacity', 0.7);
+      })
+      .on('mouseout', function (event, d) {
+        d3.select(this).attr('opacity', 0.3);
+      });
+
+    // リンクのツールチップ
+    links.append('title').text((d) => {
+      const sourceNode = d.source as D3SankeyNode;
+      const targetNode = d.target as D3SankeyNode;
+      return `${sourceNode.name} → ${targetNode.name}\n金額: ${(d.value / 100000000).toFixed(2)}億円`;
+    });
+
+    // ノードを描画
+    const nodes = g
+      .append('g')
+      .attr('class', 'nodes')
+      .selectAll('rect')
+      .data(graph.nodes)
+      .join('rect')
+      .attr('x', (d) => d.x0 || 0)
+      .attr('y', (d) => d.y0 || 0)
+      .attr('height', (d) => Math.max(0, (d.y1 || 0) - (d.y0 || 0)))
+      .attr('width', (d) => Math.max(0, (d.x1 || 0) - (d.x0 || 0)))
+      .attr('fill', (d) => colorScale(d.metadata?.ministry || d.name))
+      .attr('stroke', '#000')
+      .attr('stroke-width', 0.5)
+      .on('mouseover', function (event, d) {
+        d3.select(this).attr('opacity', 0.8);
+      })
+      .on('mouseout', function (event, d) {
+        d3.select(this).attr('opacity', 1);
+      })
+      .on('click', function (event, d) {
+        setSelectedNode(d);
+      });
+
+    // ノードのツールチップ
+    nodes.append('title').text((d) => {
+      const lines = [d.name];
+      if (d.metadata?.eventName) {
+        lines.push(`事業: ${d.metadata.eventName}`);
+      }
+      if (d.metadata?.budget) {
+        lines.push(`予算: ${(d.metadata.budget / 100000000).toFixed(2)}億円`);
+      }
+      if (d.value) {
+        lines.push(`合計: ${(d.value / 100000000).toFixed(2)}億円`);
+      }
+      return lines.join('\n');
+    });
+
+    // ノードのラベルを描画
+    g.append('g')
+      .attr('class', 'labels')
+      .selectAll('text')
+      .data(graph.nodes)
+      .join('text')
+      .attr('x', (d) => ((d.x0 || 0) < width / 2 ? (d.x1 || 0) + 6 : (d.x0 || 0) - 6))
+      .attr('y', (d) => ((d.y1 || 0) + (d.y0 || 0)) / 2)
+      .attr('dy', '0.35em')
+      .attr('text-anchor', (d) => ((d.x0 || 0) < width / 2 ? 'start' : 'end'))
+      .text((d) => {
+        const name = d.name;
+        return name.length > 20 ? name.substring(0, 20) + '...' : name;
+      })
+      .attr('font-size', 10)
+      .attr('fill', '#333')
+      .style('pointer-events', 'none');
+  }, [data, year]);
+
+  return (
+    <div className="space-y-4">
+      <div ref={containerRef} className="overflow-x-auto">
+        <svg ref={svgRef} className="w-full" style={{ minWidth: '800px' }} />
+      </div>
+
+      {selectedNode && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold text-lg mb-2">選択中のノード</h3>
+          <div className="space-y-1 text-sm">
+            <p>
+              <span className="font-medium">名前:</span> {selectedNode.name}
+            </p>
+            {selectedNode.metadata?.eventName && (
+              <p>
+                <span className="font-medium">事業:</span> {selectedNode.metadata.eventName}
+              </p>
+            )}
+            {selectedNode.metadata?.ministry && (
+              <p>
+                <span className="font-medium">府省庁:</span> {selectedNode.metadata.ministry}
+              </p>
+            )}
+            {selectedNode.value && (
+              <p>
+                <span className="font-medium">金額:</span>{' '}
+                {(selectedNode.value / 100000000).toFixed(2)}億円
+              </p>
+            )}
+            {selectedNode.metadata?.location && (
+              <p>
+                <span className="font-medium">所在地:</span> {selectedNode.metadata.location}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => setSelectedNode(null)}
+            className="mt-3 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+          >
+            閉じる
+          </button>
+        </div>
+      )}
+
+      {(!data || !data.nodes || data.nodes.length === 0 || !data.links || data.links.length === 0) && (
+        <div className="text-center py-12 text-gray-500">
+          <p>表示するデータがありません</p>
+          <p className="text-sm mt-2">別の年度または府省庁を選択してください</p>
+        </div>
+      )}
+    </div>
+  );
+}
