@@ -111,16 +111,11 @@ export default async function YearPage({ params, searchParams }: Props) {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="text-blue-600 hover:underline text-sm whitespace-nowrap">
-                ← ホーム
-              </Link>
-              <h1 className="text-xl sm:text-2xl font-bold">
-                {year}年度 行政事業レビュー
-              </h1>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-bold">
+              行政事業レビュー
+            </h1>
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-              {/* Stats */}
+              <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600">予算:</span>
                 <span className="text-sm font-bold">
@@ -145,7 +140,6 @@ export default async function YearPage({ params, searchParams }: Props) {
                 <span className="text-xs text-gray-600">事業数:</span>
                 <span className="text-sm font-bold">{statistics.eventCount}</span>
               </div>
-              <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
             </div>
           </div>
         </div>
@@ -154,14 +148,22 @@ export default async function YearPage({ params, searchParams }: Props) {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold">予算執行の流れ</h2>
+          {/* Breadcrumbs */}
+          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+            <Link href="/" className="hover:text-blue-600">
+              ホーム
+            </Link>
+            <span>/</span>
+            <Link href={`/${year}`} className="hover:text-blue-600">
+              {year}年度
+            </Link>
             {resolvedSearchParams.ministry && (
-              <p className="text-sm text-gray-600 mt-1">
-                {resolvedSearchParams.ministry}
-              </p>
+              <>
+                <span>/</span>
+                <span className="text-gray-900">{resolvedSearchParams.ministry}</span>
+              </>
             )}
-          </div>
+          </nav>
           <SankeyChart data={displaySankeyData} year={year} />
         </div>
       </div>

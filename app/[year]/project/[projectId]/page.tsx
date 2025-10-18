@@ -7,6 +7,7 @@ import {
   loadPreprocessedProjectExpenditures,
 } from '@/server/loaders/json-data-loader';
 import SankeyChart from '@/client/components/SankeyChart';
+import YearSelector from '@/client/components/YearSelector';
 import type { SankeyNode, SankeyLink } from '@/types/sankey';
 
 interface Props {
@@ -32,8 +33,8 @@ export default async function ProjectPage({ params }: Props) {
     notFound();
   }
 
-  // 支出データと府省庁データを取得
-  const [projectExpenditures, ministryProjects] = await Promise.all([
+  // 支出データ、府省庁データ、統計情報を取得
+  const [projectExpenditures, ministryProjects, statistics] = await Promise.all([
     loadPreprocessedProjectExpenditures(year),
     (async () => {
       const { loadPreprocessedMinistries, loadPreprocessedMinistryProjects } = await import('@/server/loaders/json-data-loader');
@@ -41,6 +42,10 @@ export default async function ProjectPage({ params }: Props) {
         ministries: await loadPreprocessedMinistries(year),
         ministryProjects: await loadPreprocessedMinistryProjects(year),
       };
+    })(),
+    (async () => {
+      const { loadPreprocessedStatistics } = await import('@/server/loaders/json-data-loader');
+      return loadPreprocessedStatistics(year);
     })(),
   ]);
 
@@ -72,20 +77,34 @@ export default async function ProjectPage({ params }: Props) {
         <header className="bg-white shadow-sm">
           <div className="container mx-auto px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex items-center gap-4">
-                <Link href={`/${year}`} className="text-blue-600 hover:underline text-sm whitespace-nowrap">
-                  ← {year}年度に戻る
-                </Link>
-                <h1 className="text-xl sm:text-2xl font-bold">
-                  {projectName}
-                </h1>
-              </div>
+              <h1 className="text-xl sm:text-2xl font-bold">
+                行政事業レビュー
+              </h1>
               <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600">予算:</span>
                   <span className="text-sm font-bold">
-                    {(projectBudget / 100000000).toFixed(1)}億円
+                    {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
                   </span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-600">執行額:</span>
+                  <span className="text-sm font-bold">
+                    {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
+                  </span>
+                </div>
+                {year === 2024 && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-600">執行率:</span>
+                    <span className="text-sm font-bold">
+                      {(statistics.averageExecutionRate * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-600">事業数:</span>
+                  <span className="text-sm font-bold">{statistics.eventCount}</span>
                 </div>
               </div>
             </div>
@@ -94,6 +113,29 @@ export default async function ProjectPage({ params }: Props) {
 
         <div className="container mx-auto px-4 py-6">
           <div className="bg-white rounded-lg shadow p-6">
+            {/* Breadcrumbs */}
+            <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+              <Link href="/" className="hover:text-blue-600">
+                ホーム
+              </Link>
+              <span>/</span>
+              <Link href={`/${year}`} className="hover:text-blue-600">
+                {year}年度
+              </Link>
+              {ministryName && (
+                <>
+                  <span>/</span>
+                  <Link
+                    href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
+                    className="hover:text-blue-600"
+                  >
+                    {ministryName}
+                  </Link>
+                </>
+              )}
+              <span>/</span>
+              <span className="text-gray-900">{projectName}</span>
+            </nav>
             <div className="text-center py-12 text-gray-500">
               <p className="text-lg font-medium">支出先データが存在しません</p>
               <p className="text-sm mt-2">この事業の支出先情報は公開されていません。</p>
@@ -204,33 +246,34 @@ export default async function ProjectPage({ params }: Props) {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <Link href={`/${year}`} className="text-blue-600 hover:underline text-sm whitespace-nowrap">
-                ← {year}年度に戻る
-              </Link>
-              <h1 className="text-xl sm:text-2xl font-bold">
-                {projectData.projectName}
-              </h1>
-            </div>
+            <h1 className="text-xl sm:text-2xl font-bold">
+              行政事業レビュー
+            </h1>
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-              {/* Stats */}
+              <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600">予算:</span>
                 <span className="text-sm font-bold">
-                  {(projectData.budget / 100000000).toFixed(1)}億円
+                  {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">支出額:</span>
+                <span className="text-xs text-gray-600">執行額:</span>
                 <span className="text-sm font-bold">
-                  {(projectData.totalExpenditureAmount / 100000000).toFixed(1)}億円
+                  {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
+              {year === 2024 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-600">執行率:</span>
+                  <span className="text-sm font-bold">
+                    {(statistics.averageExecutionRate * 100).toFixed(1)}%
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">不明額:</span>
-                <span className="text-sm font-bold">
-                  {(projectData.unknownAmount / 100000000).toFixed(1)}億円
-                </span>
+                <span className="text-xs text-gray-600">事業数:</span>
+                <span className="text-sm font-bold">{statistics.eventCount}</span>
               </div>
             </div>
           </div>
@@ -240,6 +283,29 @@ export default async function ProjectPage({ params }: Props) {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6">
+          {/* Breadcrumbs */}
+          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+            <Link href="/" className="hover:text-blue-600">
+              ホーム
+            </Link>
+            <span>/</span>
+            <Link href={`/${year}`} className="hover:text-blue-600">
+              {year}年度
+            </Link>
+            {ministryName && (
+              <>
+                <span>/</span>
+                <Link
+                  href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
+                  className="hover:text-blue-600"
+                >
+                  {ministryName}
+                </Link>
+              </>
+            )}
+            <span>/</span>
+            <span className="text-gray-900">{projectData.projectName}</span>
+          </nav>
           <SankeyChart data={sankeyData} year={year} />
         </div>
       </div>
