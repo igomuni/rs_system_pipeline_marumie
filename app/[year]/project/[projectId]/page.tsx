@@ -72,30 +72,10 @@ export default async function ProjectPage({ params }: Props) {
         <header className="bg-white shadow-sm">
           <div className="container mx-auto px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <div className="flex flex-col gap-2">
-                {/* Breadcrumbs */}
-                <nav className="flex items-center gap-2 text-sm text-gray-600">
-                  <Link href="/" className="hover:text-blue-600">
-                    ホーム
-                  </Link>
-                  <span>/</span>
-                  <Link href={`/${year}`} className="hover:text-blue-600">
-                    {year}年度
-                  </Link>
-                  {ministryName && (
-                    <>
-                      <span>/</span>
-                      <Link
-                        href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
-                        className="hover:text-blue-600"
-                      >
-                        {ministryName}
-                      </Link>
-                    </>
-                  )}
-                  <span>/</span>
-                  <span className="text-gray-900">{projectName}</span>
-                </nav>
+              <div className="flex items-center gap-4">
+                <Link href={`/${year}`} className="text-blue-600 hover:underline text-sm whitespace-nowrap">
+                  ← {year}年度に戻る
+                </Link>
                 <h1 className="text-xl sm:text-2xl font-bold">
                   {projectName}
                 </h1>
@@ -224,30 +204,10 @@ export default async function ProjectPage({ params }: Props) {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex flex-col gap-2">
-              {/* Breadcrumbs */}
-              <nav className="flex items-center gap-2 text-sm text-gray-600">
-                <Link href="/" className="hover:text-blue-600">
-                  ホーム
-                </Link>
-                <span>/</span>
-                <Link href={`/${year}`} className="hover:text-blue-600">
-                  {year}年度
-                </Link>
-                {ministryName && (
-                  <>
-                    <span>/</span>
-                    <Link
-                      href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
-                      className="hover:text-blue-600"
-                    >
-                      {ministryName}
-                    </Link>
-                  </>
-                )}
-                <span>/</span>
-                <span className="text-gray-900">{projectData.projectName}</span>
-              </nav>
+            <div className="flex items-center gap-4">
+              <Link href={`/${year}`} className="text-blue-600 hover:underline text-sm whitespace-nowrap">
+                ← {year}年度に戻る
+              </Link>
               <h1 className="text-xl sm:text-2xl font-bold">
                 {projectData.projectName}
               </h1>
