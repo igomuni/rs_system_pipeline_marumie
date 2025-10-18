@@ -77,11 +77,13 @@ export default async function ProjectPage({ params }: Props) {
         <header className="bg-white shadow-sm">
           <div className="container mx-auto px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold">
-                行政事業レビュー
-              </h1>
-              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl sm:text-2xl font-bold">
+                  行政事業レビュー
+                </h1>
                 <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
+              </div>
+              <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                 <div className="flex items-center gap-1">
                   <span className="text-xs text-gray-600">予算:</span>
                   <span className="text-sm font-bold">
@@ -246,11 +248,13 @@ export default async function ProjectPage({ params }: Props) {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h1 className="text-xl sm:text-2xl font-bold">
-              行政事業レビュー
-            </h1>
-            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl sm:text-2xl font-bold">
+                行政事業レビュー
+              </h1>
               <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
+            </div>
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <div className="flex items-center gap-1">
                 <span className="text-xs text-gray-600">予算:</span>
                 <span className="text-sm font-bold">
