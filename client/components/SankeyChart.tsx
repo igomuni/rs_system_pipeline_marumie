@@ -147,33 +147,49 @@ export default function SankeyChart({ data, year }: Props) {
         d3.select(this).attr('opacity', 1);
       })
       .on('click', function (event, d) {
-        // ノードタイプに応じて遷移先を決定
-        if (d.type === 'project') {
-          if (d.metadata?.ministry) {
-            // 事業ノード（府省庁情報あり）→ 府省庁ページへ戻る
+        // 左右の位置で階層ナビゲーションを決定
+        const isLeft = (d.x0 || 0) < width / 2;
+
+        if (isLeft) {
+          // 左側のノード → 親階層へ戻る
+          if (d.type === 'project' && d.metadata?.ministry) {
+            // 事業ノード → 府省庁ページへ
             router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
-          } else if (d.metadata?.projectId) {
-            // 事業ノード（府省庁情報なし）→ 事業詳細ページへ進む
-            router.push(`/${year}/project/${d.metadata.projectId}`);
+          } else if (d.type === 'ministry') {
+            // 府省庁ノード → 年度トップページへ
+            router.push(`/${year}`);
+          } else if (d.type === 'total') {
+            // 年度予算ノード → ホームページへ
+            router.push('/');
+          } else {
+            // その他の左側ノード → 選択状態を表示
+            setSelectedNode(d);
           }
-        } else if (d.type === 'ministry' && d.metadata?.ministry) {
-          // 府省庁ノード → 年度トップページへ戻る
-          router.push(`/${year}`);
-        } else if (d.type === 'total') {
-          // 年度予算ノード → 年度トップページ
-          router.push(`/${year}`);
         } else {
-          // その他のノード → 選択状態を表示
-          setSelectedNode(d);
+          // 右側のノード → 子階層へ進む
+          if (d.type === 'ministry' && d.metadata?.ministry) {
+            // 府省庁ノード → 府省庁詳細ページへ
+            router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
+          } else if (d.type === 'project' && d.metadata?.projectId) {
+            // 事業ノード → 事業詳細ページへ
+            router.push(`/${year}/project/${d.metadata.projectId}`);
+          } else {
+            // その他の右側ノード（支出先など） → 選択状態を表示
+            setSelectedNode(d);
+          }
         }
       })
       .style('cursor', (d) => {
         // クリック可能なノードはポインターカーソルを表示
-        const isClickable =
+        const isNavigable =
           (d.type === 'project' && (d.metadata?.projectId || d.metadata?.ministry)) ||
           (d.type === 'ministry' && d.metadata?.ministry) ||
           (d.type === 'total');
-        return isClickable ? 'pointer' : 'default';
+        const isSelectable =
+          d.type === 'expenditure' ||
+          d.type === 'others' ||
+          d.type === 'unknown';
+        return isNavigable || isSelectable ? 'pointer' : 'default';
       });
 
     // ノードのツールチップ
