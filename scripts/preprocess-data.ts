@@ -107,7 +107,10 @@ async function processYearData(year: Year) {
   const ministries = extractMinistries(budgetData, year);
 
   // 府省庁ごとの事業データを生成
-  const ministryProjects = generateMinistryProjectsData(budgetData, year);
+  const ministryProjects = generateMinistryProjectsData(budgetData, expenditureData, year);
+
+  // 事業ごとの支出先データを生成
+  const projectExpenditures = generateProjectExpendituresData(budgetData, expenditureData, year);
 
   // 結果をJSONファイルとして保存
   const outputDir = path.join(OUTPUT_BASE_PATH, `year_${year}`);
@@ -129,6 +132,10 @@ async function processYearData(year: Year) {
     fs.writeFile(
       path.join(outputDir, 'ministry-projects.json'),
       JSON.stringify(ministryProjects, null, 2)
+    ),
+    fs.writeFile(
+      path.join(outputDir, 'project-expenditures.json'),
+      JSON.stringify(projectExpenditures, null, 2)
     ),
   ]);
 
@@ -219,28 +226,35 @@ function generateSimplifiedSankeyData(
 /**
  * 府省庁ごとの事業データを生成（Top10 + その他）
  */
-function generateMinistryProjectsData(budgetData: any[], year: Year) {
+function generateMinistryProjectsData(budgetData: any[], expenditureData: any[], year: Year) {
   // 対象年度のデータのみをフィルター
   const currentYearBudgetData = budgetData.filter((budget) => {
     const budgetYear = budget.予算年度;
     return budgetYear === year;
   });
 
-  // 府省庁 → 事業名ごとの予算を集約
-  const ministryProjects = new Map<string, Map<string, number>>();
+  // 府省庁 → 事業ごとの予算を集約（予算事業IDをキーとして保持）
+  const ministryProjects = new Map<string, Map<number, { name: string; budget: number }>>();
 
   currentYearBudgetData.forEach((budget) => {
     const ministry = budget.府省庁;
     const projectName = budget.事業名;
-    if (!ministry || !projectName) return;
+    const projectId = budget.予算事業ID;
+    if (!ministry || !projectName || !projectId) return;
 
     const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
 
     if (!ministryProjects.has(ministry)) {
-      ministryProjects.set(ministry, new Map<string, number>());
+      ministryProjects.set(ministry, new Map<number, { name: string; budget: number }>());
     }
     const projects = ministryProjects.get(ministry)!;
-    projects.set(projectName, (projects.get(projectName) || 0) + budgetAmount);
+
+    if (projects.has(projectId)) {
+      const existing = projects.get(projectId)!;
+      existing.budget += budgetAmount;
+    } else {
+      projects.set(projectId, { name: projectName, budget: budgetAmount });
+    }
   });
 
   // 各府省庁のTop10事業を抽出
@@ -248,17 +262,132 @@ function generateMinistryProjectsData(budgetData: any[], year: Year) {
 
   ministryProjects.forEach((projects, ministry) => {
     const sortedProjects = Array.from(projects.entries())
-      .sort(([, a], [, b]) => b - a);
+      .sort(([, a], [, b]) => b.budget - a.budget);
 
     const top10 = sortedProjects.slice(0, 10);
     const others = sortedProjects.slice(10);
-    const othersTotal = others.reduce((sum, [, amount]) => sum + amount, 0);
+    const othersTotal = others.reduce((sum, [, project]) => sum + project.budget, 0);
 
     result[ministry] = {
-      top10: top10.map(([name, amount]) => ({ name, amount })),
+      top10: top10.map(([projectId, project]) => ({
+        projectId,
+        name: project.name,
+        budget: project.budget
+      })),
       othersTotal,
       totalProjects: sortedProjects.length,
     };
+  });
+
+  return result;
+}
+
+/**
+ * 事業ごとの支出先データを生成（府省庁別Top10事業のみ）
+ */
+function generateProjectExpendituresData(budgetData: any[], expenditureData: any[], year: Year) {
+  // 府省庁別Top10を取得するため、まず予算データを集約
+  const ministryProjects = new Map<string, Map<number, { name: string; budget: number }>>();
+
+  const currentYearBudgetData = budgetData.filter((budget) => budget.予算年度 === year);
+
+  currentYearBudgetData.forEach((budget) => {
+    const ministry = budget.府省庁;
+    const projectId = budget.予算事業ID;
+    const projectName = budget.事業名;
+    if (!ministry || !projectId || !projectName) return;
+
+    const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
+
+    if (!ministryProjects.has(ministry)) {
+      ministryProjects.set(ministry, new Map());
+    }
+    const projects = ministryProjects.get(ministry)!;
+
+    if (projects.has(projectId)) {
+      projects.get(projectId)!.budget += budgetAmount;
+    } else {
+      projects.set(projectId, { name: projectName, budget: budgetAmount });
+    }
+  });
+
+  // Top10事業のIDセットを作成
+  const top10ProjectIds = new Set<number>();
+
+  ministryProjects.forEach((projects) => {
+    const sorted = Array.from(projects.entries())
+      .sort(([, a], [, b]) => b.budget - a.budget)
+      .slice(0, 10);
+    sorted.forEach(([projectId]) => top10ProjectIds.add(projectId));
+  });
+
+  // Top10事業の支出先データを抽出
+  const result: Record<number, any> = {};
+
+  const currentYearExpenditureData = expenditureData.filter((exp) => {
+    const expYear = exp.事業年度;
+    return expYear === year;
+  });
+
+  currentYearExpenditureData.forEach((exp) => {
+    const projectId = exp.予算事業ID;
+    if (!projectId || !top10ProjectIds.has(projectId)) return;
+
+    const expenditureName = year === 2024 ? exp.支出先名 : exp.支出先名;
+    const expenditureAmount = year === 2024
+      ? (exp.金額 || 0)  // 2024: 金額フィールド（1円単位）
+      : normalizeAmount(exp['支出額（百万円）'] || 0, year);  // 2014-2023: 百万円単位
+
+    if (!expenditureName || !expenditureAmount) return;
+
+    if (!result[projectId]) {
+      result[projectId] = {
+        projectId,
+        projectName: exp.事業名,
+        expenditures: [] as Array<{ name: string; amount: number }>,
+      };
+    }
+
+    // 同じ支出先は金額を合算
+    const existing = result[projectId].expenditures.find((e: any) => e.name === expenditureName);
+    if (existing) {
+      existing.amount += expenditureAmount;
+    } else {
+      result[projectId].expenditures.push({ name: expenditureName, amount: expenditureAmount });
+    }
+  });
+
+  // 各事業の支出先を金額降順でソート、Top20のみ保持
+  // 同時に予算データも紐づける
+  Object.keys(result).forEach((projectIdStr) => {
+    const projectId = Number(projectIdStr);
+    const project = result[projectId];
+
+    // 予算データを取得
+    let projectBudget = 0;
+    for (const [, projects] of ministryProjects) {
+      if (projects.has(projectId)) {
+        projectBudget = projects.get(projectId)!.budget;
+        break;
+      }
+    }
+
+    project.expenditures.sort((a: any, b: any) => b.amount - a.amount);
+
+    const top20 = project.expenditures.slice(0, 20);
+    const others = project.expenditures.slice(20);
+    const othersTotal = others.reduce((sum: number, exp: any) => sum + exp.amount, 0);
+    const totalExpenditureAmount = project.expenditures.reduce((sum: number, exp: any) => sum + exp.amount, 0);
+
+    // 予算と支出の差分（不明部分）を計算
+    const unknownAmount = Math.max(0, projectBudget - totalExpenditureAmount);
+
+    project.budget = projectBudget;
+    project.top20Expenditures = top20;
+    project.othersTotal = othersTotal;
+    project.totalExpenditureAmount = totalExpenditureAmount;
+    project.unknownAmount = unknownAmount;
+    delete project.expenditures;
   });
 
   return result;

@@ -65,19 +65,23 @@ export default async function YearPage({ params, searchParams }: Props) {
       let nodeIndex = 0;
 
       // Top10の事業ノード
-      ministryData.top10.forEach((project) => {
+      ministryData.top10.forEach((project: any) => {
         const projectNode: SankeyNode = {
-          id: `project_${nodeIndex++}`,
+          id: `project_${project.projectId}`,
           name: project.name,
           type: 'project' as const,
-          metadata: { ministry: resolvedSearchParams.ministry },
+          metadata: {
+            ministry: resolvedSearchParams.ministry,
+            projectId: project.projectId,
+            budget: project.budget,
+          },
         };
         nodes.push(projectNode);
 
         links.push({
           source: ministryNode.id,
           target: projectNode.id,
-          value: project.amount,
+          value: project.budget,
         });
       });
 

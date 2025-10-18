@@ -6,6 +6,7 @@ import {
   getStatistics,
   getMinistries,
   getMinistryProjects,
+  getProjectExpenditures,
 } from '../repositories/json-repository';
 
 /**
@@ -36,4 +37,11 @@ export async function loadPreprocessedStatistics(year: Year) {
  */
 export async function loadPreprocessedMinistryProjects(year: Year) {
   return getMinistryProjects(year);
+}
+
+/**
+ * 指定年度の事業別支出データを取得（事前処理済みJSON版）
+ */
+export async function loadPreprocessedProjectExpenditures(year: Year) {
+  return getProjectExpenditures(year);
 }

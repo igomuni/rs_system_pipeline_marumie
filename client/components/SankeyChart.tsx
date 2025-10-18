@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import * as d3 from 'd3';
 import { sankey, sankeyLinkHorizontal, type SankeyGraph } from 'd3-sankey';
 import type { SankeyData, D3SankeyNode, D3SankeyLink } from '@/types/sankey';
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function SankeyChart({ data, year }: Props) {
+  const router = useRouter();
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<D3SankeyNode | null>(null);
@@ -145,7 +147,16 @@ export default function SankeyChart({ data, year }: Props) {
         d3.select(this).attr('opacity', 1);
       })
       .on('click', function (event, d) {
-        setSelectedNode(d);
+        // 事業ノード（projectId持ち）の場合は詳細ページに遷移
+        if (d.type === 'project' && d.metadata?.projectId) {
+          router.push(`/${year}/project/${d.metadata.projectId}`);
+        } else {
+          setSelectedNode(d);
+        }
+      })
+      .style('cursor', (d) => {
+        // 事業ノードの場合はポインターカーソルを表示
+        return d.type === 'project' && d.metadata?.projectId ? 'pointer' : 'default';
       });
 
     // ノードのツールチップ

@@ -73,9 +73,25 @@ export async function getMinistries(
 export async function getMinistryProjects(year: Year) {
   const filePath = path.join(DATA_BASE_PATH, `year_${year}`, 'ministry-projects.json');
   return readJSON<Record<string, {
-    top10: Array<{ name: string; amount: number }>;
+    top10: Array<{ projectId: number; name: string; budget: number }>;
     othersTotal: number;
     totalProjects: number;
+  }>>(filePath);
+}
+
+/**
+ * 事業別支出データを取得
+ */
+export async function getProjectExpenditures(year: Year) {
+  const filePath = path.join(DATA_BASE_PATH, `year_${year}`, 'project-expenditures.json');
+  return readJSON<Record<number, {
+    projectId: number;
+    projectName: string;
+    budget: number;
+    top20Expenditures: Array<{ name: string; amount: number }>;
+    othersTotal: number;
+    totalExpenditureAmount: number;
+    unknownAmount: number;
   }>>(filePath);
 }
 

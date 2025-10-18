@@ -3,7 +3,7 @@
  */
 
 // ノードの種類
-export type NodeType = 'total' | 'ministry' | 'block' | 'recipient' | 'project' | 'others';
+export type NodeType = 'total' | 'ministry' | 'block' | 'recipient' | 'project' | 'others' | 'expenditure' | 'unknown';
 
 // サンキー図のノード
 export interface SankeyNode {
@@ -13,12 +13,14 @@ export interface SankeyNode {
   metadata?: {
     eventId?: number;
     eventName?: string;
+    projectId?: number;
     budget?: number;
     execution?: number;
     executionRate?: number;
     ministry?: string;
     location?: string;
     corporateNumber?: string;
+    amount?: number;
   };
 }
 
