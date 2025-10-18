@@ -147,16 +147,28 @@ export default function SankeyChart({ data, year }: Props) {
         d3.select(this).attr('opacity', 1);
       })
       .on('click', function (event, d) {
-        // 事業ノード（projectId持ち）の場合は詳細ページに遷移
+        // ノードタイプに応じて遷移先を決定
         if (d.type === 'project' && d.metadata?.projectId) {
+          // 事業ノード → 事業詳細ページ
           router.push(`/${year}/project/${d.metadata.projectId}`);
+        } else if (d.type === 'ministry' && d.metadata?.ministry) {
+          // 府省庁ノード → 府省庁フィルターページ
+          router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
+        } else if (d.type === 'total') {
+          // 年度予算ノード → 年度トップページ
+          router.push(`/${year}`);
         } else {
+          // その他のノード → 選択状態を表示
           setSelectedNode(d);
         }
       })
       .style('cursor', (d) => {
-        // 事業ノードの場合はポインターカーソルを表示
-        return d.type === 'project' && d.metadata?.projectId ? 'pointer' : 'default';
+        // クリック可能なノードはポインターカーソルを表示
+        const isClickable =
+          (d.type === 'project' && d.metadata?.projectId) ||
+          (d.type === 'ministry' && d.metadata?.ministry) ||
+          (d.type === 'total');
+        return isClickable ? 'pointer' : 'default';
       });
 
     // ノードのツールチップ
