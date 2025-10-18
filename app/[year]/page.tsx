@@ -11,6 +11,7 @@ import {
 } from '@/server/loaders/json-data-loader';
 import SankeyChart from '@/client/components/SankeyChart';
 import YearSelector from '@/client/components/YearSelector';
+import MinistryFilter from '@/client/components/MinistryFilter';
 import type { SankeyNode, SankeyLink } from '@/types/sankey';
 
 interface Props {
@@ -155,34 +156,11 @@ export default async function YearPage({ params, searchParams }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
-              <h2 className="font-semibold mb-3">府省庁フィルター</h2>
-              <div className="space-y-2">
-                <Link
-                  href={`/${year}`}
-                  className={`block px-3 py-2 rounded ${
-                    !resolvedSearchParams.ministry
-                      ? 'bg-blue-100 text-blue-700 font-medium'
-                      : 'hover:bg-gray-100'
-                  }`}
-                >
-                  すべて
-                </Link>
-                {ministries.map((ministry) => (
-                  <Link
-                    key={ministry}
-                    href={`/${year}?ministry=${encodeURIComponent(ministry)}`}
-                    className={`block px-3 py-2 rounded text-sm ${
-                      resolvedSearchParams.ministry === ministry
-                        ? 'bg-blue-100 text-blue-700 font-medium'
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    {ministry}
-                  </Link>
-                ))}
-              </div>
-            </div>
+            <MinistryFilter
+              ministries={ministries}
+              year={year}
+              selectedMinistry={resolvedSearchParams.ministry}
+            />
           </aside>
 
           {/* Sankey Chart */}

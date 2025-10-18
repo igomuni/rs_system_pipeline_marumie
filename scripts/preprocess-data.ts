@@ -292,10 +292,44 @@ function calculateStatistics(budgetData: any[], year: Year) {
     0
   );
 
-  const validRates = executionYearBudgetData.filter((item) => item.執行率);
+  // 執行率を計算
+  // 2024年: CSVに執行率フィールドが存在する（小数形式: 0.33 = 33%）
+  // 2014-2023年: 執行率フィールドが存在しないため、執行額÷当初予算で計算
+  const validRates = executionYearBudgetData.filter((item) => {
+    const budget = item['当初予算(合計)'] || item['当初予算（合計）'] || 0;
+    const execution = item['執行額(合計)'] || item['執行額（合計）'] || 0;
+
+    // 2024年: 執行率フィールドが存在する場合
+    if (year === 2024) {
+      const rate = item.執行率;
+      return rate != null && rate !== '' && rate !== 0 && !isNaN(rate);
+    }
+
+    // 2014-2023年: 予算と執行額から計算
+    return budget > 0 && execution > 0;
+  });
+
+  console.log(`  - Valid execution rates: ${validRates.length}/${executionYearBudgetData.length}`);
+
   const averageExecutionRate =
     validRates.length > 0
-      ? validRates.reduce((sum, item) => sum + (item.執行率 || 0), 0) / validRates.length
+      ? validRates.reduce((sum, item) => {
+          let rate: number;
+
+          if (year === 2024) {
+            // 2024年: 執行率フィールドを使用（既に小数形式）
+            rate = Number(item.執行率);
+          } else {
+            // 2014-2023年: 執行額 ÷ 当初予算で計算
+            const budget = normalizeAmount(item['当初予算(合計)'] || item['当初予算（合計）'] || 0, year);
+            const execution = normalizeAmount(item['執行額(合計)'] || item['執行額（合計）'] || 0, year);
+            rate = budget > 0 ? execution / budget : 0;
+          }
+
+          // 異常値(1を超える値)はキャップする
+          const normalizedRate = Math.min(rate, 1);
+          return sum + normalizedRate;
+        }, 0) / validRates.length
       : 0;
 
   const eventCount = new Set(currentYearBudgetData.map((item) => item.予算事業ID)).size;
@@ -311,22 +345,29 @@ function calculateStatistics(budgetData: any[], year: Year) {
 }
 
 /**
- * 府省庁リストを抽出
+ * 府省庁リストを抽出（金額付き、金額降順ソート）
  */
-function extractMinistries(budgetData: any[], year: Year): string[] {
+function extractMinistries(budgetData: any[], year: Year): Array<{ name: string; budget: number }> {
   // 対象年度のデータのみをフィルター
   const currentYearBudgetData = budgetData.filter((budget) => {
     const budgetYear = budget.予算年度;
     return budgetYear === year;
   });
 
-  const ministries = new Set<string>();
+  // 府省庁ごとに予算を集約
+  const ministryBudgets = new Map<string, number>();
   currentYearBudgetData.forEach((budget) => {
-    if (budget.府省庁) {
-      ministries.add(budget.府省庁);
-    }
+    const ministry = budget.府省庁;
+    if (!ministry) return;
+
+    const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
+    ministryBudgets.set(ministry, (ministryBudgets.get(ministry) || 0) + budgetAmount);
   });
-  return Array.from(ministries).sort();
+
+  // 金額降順でソートして返す
+  return Array.from(ministryBudgets.entries())
+    .map(([name, budget]) => ({ name, budget }))
+    .sort((a, b) => b.budget - a.budget);
 }
 
 /**

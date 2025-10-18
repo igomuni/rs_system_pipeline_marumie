@@ -1,7 +1,7 @@
 {
   "totalBudget": 112700559819000,
   "totalExecution": 147752713273165,
-  "averageExecutionRate": 0,
+  "averageExecutionRate": 0.9994596461984682,
   "eventCount": 4561,
   "ministryCount": 21
 }

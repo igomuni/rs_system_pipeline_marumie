@@ -40,8 +40,11 @@ export default function SankeyChart({ data, year }: Props) {
     // コンテナのサイズを取得
     const containerWidth = containerRef.current.offsetWidth;
     const width = containerWidth > 0 ? containerWidth : 800; // フォールバック値を設定
-    const height = 600;
-    const margin = { top: 20, right: 120, bottom: 20, left: 120 };
+    const isMobile = width < 640; // Tailwind sm breakpoint
+    const height = isMobile ? 500 : 600;
+    const margin = isMobile
+      ? { top: 10, right: 60, bottom: 10, left: 60 }
+      : { top: 20, right: 120, bottom: 20, left: 120 };
 
     // SVGをクリア
     d3.select(svgRef.current).selectAll('*').remove();
@@ -170,13 +173,17 @@ export default function SankeyChart({ data, year }: Props) {
       const textAnchor = isLeft ? 'start' : 'end';
 
       // 名前を表示
-      const name = d.name.length > 20 ? d.name.substring(0, 20) + '...' : d.name;
+      const maxNameLength = isMobile ? 12 : 20;
+      const name = d.name.length > maxNameLength ? d.name.substring(0, maxNameLength) + '...' : d.name;
+      const nameFontSize = isMobile ? 8 : 10;
+      const amountFontSize = isMobile ? 7 : 9;
+
       labels.append('text')
         .attr('x', x)
         .attr('y', y - 6)
         .attr('text-anchor', textAnchor)
         .text(name)
-        .attr('font-size', 10)
+        .attr('font-size', nameFontSize)
         .attr('fill', '#333')
         .style('pointer-events', 'none');
 
@@ -187,7 +194,7 @@ export default function SankeyChart({ data, year }: Props) {
           .attr('y', y + 6)
           .attr('text-anchor', textAnchor)
           .text(formatAmount(d.value))
-          .attr('font-size', 9)
+          .attr('font-size', amountFontSize)
           .attr('fill', '#666')
           .style('pointer-events', 'none');
       }
@@ -196,8 +203,8 @@ export default function SankeyChart({ data, year }: Props) {
 
   return (
     <div className="space-y-4">
-      <div ref={containerRef} className="overflow-x-auto">
-        <svg ref={svgRef} className="w-full" style={{ minWidth: '800px' }} />
+      <div ref={containerRef} className="w-full">
+        <svg ref={svgRef} className="w-full" />
       </div>
 
       {selectedNode && (

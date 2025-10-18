@@ -60,9 +60,11 @@ export async function getStatistics(year: Year) {
 /**
  * 府省庁リストを取得
  */
-export async function getMinistries(year: Year): Promise<string[]> {
+export async function getMinistries(
+  year: Year
+): Promise<Array<{ name: string; budget: number }>> {
   const filePath = path.join(DATA_BASE_PATH, `year_${year}`, 'ministries.json');
-  return readJSON<string[]>(filePath);
+  return readJSON<Array<{ name: string; budget: number }>>(filePath);
 }
 
 /**
