@@ -155,7 +155,7 @@ export default async function YearPage({ params, searchParams }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar */}
           <aside className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div className="bg-white rounded-lg shadow p-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
               <h2 className="font-semibold mb-3">府省庁フィルター</h2>
               <div className="space-y-2">
                 <Link

@@ -39,19 +39,20 @@ export default function SankeyChart({ data, year }: Props) {
 
     // コンテナのサイズを取得
     const containerWidth = containerRef.current.offsetWidth;
-    const width = containerWidth;
+    const width = containerWidth > 0 ? containerWidth : 800; // フォールバック値を設定
     const height = 600;
     const margin = { top: 20, right: 120, bottom: 20, left: 120 };
 
     // SVGをクリア
     d3.select(svgRef.current).selectAll('*').remove();
 
-    // SVGを設定
+    // SVGを設定 (iPhone Safari対応のため明示的に属性を設定)
     const svg = d3
       .select(svgRef.current)
-      .attr('width', width)
+      .attr('width', '100%')
       .attr('height', height)
-      .attr('viewBox', [0, 0, width, height]);
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 

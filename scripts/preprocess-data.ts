@@ -279,10 +279,12 @@ function calculateStatistics(budgetData: any[], year: Year) {
     0
   );
 
-  // 執行額は予算年度=year-1のデータを使用（前年度の執行実績）
+  // 執行額の取得
+  // 2024年度: 予算年度=2023のデータを使用（事業年度2024のファイルに含まれる）
+  // 2014-2023年度: 予算年度=yearのデータを使用（同じ年度のファイルに執行データが含まれる）
   const executionYearBudgetData = budgetData.filter((budget) => {
     const budgetYear = budget.予算年度;
-    return budgetYear === year - 1;
+    return year === 2024 ? budgetYear === year - 1 : budgetYear === year;
   });
 
   const totalExecution = executionYearBudgetData.reduce(
