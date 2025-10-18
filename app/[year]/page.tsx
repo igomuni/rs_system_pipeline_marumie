@@ -106,50 +106,47 @@ export default async function YearPage({ params, searchParams }: Props) {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Link href="/" className="text-blue-600 hover:underline text-sm">
-                ← ホームに戻る
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-blue-600 hover:underline text-sm whitespace-nowrap">
+                ← ホーム
               </Link>
-              <h1 className="text-2xl font-bold mt-1">
+              <h1 className="text-xl sm:text-2xl font-bold">
                 {year}年度 行政事業レビュー
               </h1>
             </div>
-            <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+              {/* Stats */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600">予算:</span>
+                <span className="text-sm font-bold">
+                  {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600">執行額:</span>
+                <span className="text-sm font-bold">
+                  {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
+                </span>
+              </div>
+              {year === 2024 && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-600">執行率:</span>
+                  <span className="text-sm font-bold">
+                    {(statistics.averageExecutionRate * 100).toFixed(1)}%
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-600">事業数:</span>
+                <span className="text-sm font-bold">{statistics.eventCount}</span>
+              </div>
+              <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
+            </div>
           </div>
         </div>
       </header>
-
-      {/* Stats Bar */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-gray-600">当初予算総額</div>
-              <div className="text-xl font-bold">
-                {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">執行額</div>
-              <div className="text-xl font-bold">
-                {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">平均執行率</div>
-              <div className="text-xl font-bold">
-                {(statistics.averageExecutionRate * 100).toFixed(1)}%
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600">事業数</div>
-              <div className="text-xl font-bold">{statistics.eventCount}</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
