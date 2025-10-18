@@ -148,12 +148,17 @@ export default function SankeyChart({ data, year }: Props) {
       })
       .on('click', function (event, d) {
         // ノードタイプに応じて遷移先を決定
-        if (d.type === 'project' && d.metadata?.projectId) {
-          // 事業ノード → 事業詳細ページ
-          router.push(`/${year}/project/${d.metadata.projectId}`);
+        if (d.type === 'project') {
+          if (d.metadata?.ministry) {
+            // 事業ノード（府省庁情報あり）→ 府省庁ページへ戻る
+            router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
+          } else if (d.metadata?.projectId) {
+            // 事業ノード（府省庁情報なし）→ 事業詳細ページへ進む
+            router.push(`/${year}/project/${d.metadata.projectId}`);
+          }
         } else if (d.type === 'ministry' && d.metadata?.ministry) {
-          // 府省庁ノード → 府省庁フィルターページ
-          router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
+          // 府省庁ノード → 年度トップページへ戻る
+          router.push(`/${year}`);
         } else if (d.type === 'total') {
           // 年度予算ノード → 年度トップページ
           router.push(`/${year}`);
@@ -165,7 +170,7 @@ export default function SankeyChart({ data, year }: Props) {
       .style('cursor', (d) => {
         // クリック可能なノードはポインターカーソルを表示
         const isClickable =
-          (d.type === 'project' && d.metadata?.projectId) ||
+          (d.type === 'project' && (d.metadata?.projectId || d.metadata?.ministry)) ||
           (d.type === 'ministry' && d.metadata?.ministry) ||
           (d.type === 'total');
         return isClickable ? 'pointer' : 'default';

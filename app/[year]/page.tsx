@@ -11,7 +11,6 @@ import {
 } from '@/server/loaders/json-data-loader';
 import SankeyChart from '@/client/components/SankeyChart';
 import YearSelector from '@/client/components/YearSelector';
-import MinistryFilter from '@/client/components/MinistryFilter';
 import type { SankeyNode, SankeyLink } from '@/types/sankey';
 
 interface Props {
@@ -154,30 +153,16 @@ export default async function YearPage({ params, searchParams }: Props) {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <aside className="lg:col-span-1">
-            <MinistryFilter
-              ministries={ministries}
-              year={year}
-              selectedMinistry={resolvedSearchParams.ministry}
-            />
-          </aside>
-
-          {/* Sankey Chart */}
-          <main className="lg:col-span-3">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold">予算執行の流れ</h2>
-                {resolvedSearchParams.ministry && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    フィルター: {resolvedSearchParams.ministry}
-                  </p>
-                )}
-              </div>
-              <SankeyChart data={displaySankeyData} year={year} />
-            </div>
-          </main>
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold">予算執行の流れ</h2>
+            {resolvedSearchParams.ministry && (
+              <p className="text-sm text-gray-600 mt-1">
+                {resolvedSearchParams.ministry}
+              </p>
+            )}
+          </div>
+          <SankeyChart data={displaySankeyData} year={year} />
         </div>
       </div>
 

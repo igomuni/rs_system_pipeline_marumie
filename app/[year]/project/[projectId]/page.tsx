@@ -32,44 +32,70 @@ export default async function ProjectPage({ params }: Props) {
     notFound();
   }
 
-  // 支出データを取得
-  const projectExpenditures = await loadPreprocessedProjectExpenditures(year);
+  // 支出データと府省庁データを取得
+  const [projectExpenditures, ministryProjects] = await Promise.all([
+    loadPreprocessedProjectExpenditures(year),
+    (async () => {
+      const { loadPreprocessedMinistries, loadPreprocessedMinistryProjects } = await import('@/server/loaders/json-data-loader');
+      return {
+        ministries: await loadPreprocessedMinistries(year),
+        ministryProjects: await loadPreprocessedMinistryProjects(year),
+      };
+    })(),
+  ]);
+
   const projectData = projectExpenditures[projectId];
 
-  // 支出データがない場合は、ministry-projectsから基本情報を取得
+  // 府省庁情報を取得（すべての府省庁のTop10事業から検索）
+  let ministryName = '';
+  let projectName = '';
+  let projectBudget = 0;
+
+  for (const ministry of Object.keys(ministryProjects.ministryProjects)) {
+    const project = ministryProjects.ministryProjects[ministry].top10.find((p: any) => p.projectId === projectId);
+    if (project) {
+      ministryName = ministry;
+      projectName = project.name;
+      projectBudget = project.budget;
+      break;
+    }
+  }
+
+  if (!projectName) {
+    notFound();
+  }
+
+  // 支出データがない場合は、予算情報のみ表示
   if (!projectData) {
-    const ministryProjects = await (async () => {
-      const { loadPreprocessedMinistryProjects } = await import('@/server/loaders/json-data-loader');
-      return loadPreprocessedMinistryProjects(year);
-    })();
-
-    // すべての府省庁のTop10事業から該当事業を検索
-    let projectName = '';
-    let projectBudget = 0;
-
-    for (const ministry of Object.keys(ministryProjects)) {
-      const project = ministryProjects[ministry].top10.find((p: any) => p.projectId === projectId);
-      if (project) {
-        projectName = project.name;
-        projectBudget = project.budget;
-        break;
-      }
-    }
-
-    if (!projectName) {
-      notFound();
-    }
-
-    // 支出データがない場合は、予算全額を「不明」として表示
     return (
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white shadow-sm">
           <div className="container mx-auto px-4 py-3">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-4">
-                <Link href={`/${year}`} className="text-blue-600 hover:underline text-sm whitespace-nowrap">
-                  ← {year}年度に戻る
-                </Link>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex flex-col gap-2">
+                {/* Breadcrumbs */}
+                <nav className="flex items-center gap-2 text-sm text-gray-600">
+                  <Link href="/" className="hover:text-blue-600">
+                    ホーム
+                  </Link>
+                  <span>/</span>
+                  <Link href={`/${year}`} className="hover:text-blue-600">
+                    {year}年度
+                  </Link>
+                  {ministryName && (
+                    <>
+                      <span>/</span>
+                      <Link
+                        href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
+                        className="hover:text-blue-600"
+                      >
+                        {ministryName}
+                      </Link>
+                    </>
+                  )}
+                  <span>/</span>
+                  <span className="text-gray-900">{projectName}</span>
+                </nav>
                 <h1 className="text-xl sm:text-2xl font-bold">
                   {projectName}
                 </h1>
@@ -118,7 +144,7 @@ export default async function ProjectPage({ params }: Props) {
   const nodes: SankeyNode[] = [];
   const links: SankeyLink[] = [];
 
-  // 事業ノード
+  // 事業ノード（府省庁情報を追加して逆方向のナビゲーションを可能にする）
   const projectNode: SankeyNode = {
     id: 'project',
     name: projectData.projectName,
@@ -126,6 +152,7 @@ export default async function ProjectPage({ params }: Props) {
     metadata: {
       projectId,
       budget: projectData.budget,
+      ministry: ministryName, // 府省庁ページへの逆ナビゲーション用
     },
   };
   nodes.push(projectNode);
@@ -196,11 +223,31 @@ export default async function ProjectPage({ params }: Props) {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-3">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-4">
-              <Link href={`/${year}`} className="text-blue-600 hover:underline text-sm whitespace-nowrap">
-                ← {year}年度に戻る
-              </Link>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-col gap-2">
+              {/* Breadcrumbs */}
+              <nav className="flex items-center gap-2 text-sm text-gray-600">
+                <Link href="/" className="hover:text-blue-600">
+                  ホーム
+                </Link>
+                <span>/</span>
+                <Link href={`/${year}`} className="hover:text-blue-600">
+                  {year}年度
+                </Link>
+                {ministryName && (
+                  <>
+                    <span>/</span>
+                    <Link
+                      href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
+                      className="hover:text-blue-600"
+                    >
+                      {ministryName}
+                    </Link>
+                  </>
+                )}
+                <span>/</span>
+                <span className="text-gray-900">{projectData.projectName}</span>
+              </nav>
               <h1 className="text-xl sm:text-2xl font-bold">
                 {projectData.projectName}
               </h1>
@@ -233,12 +280,6 @@ export default async function ProjectPage({ params }: Props) {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold">支出先の内訳</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              予算から支出先への資金の流れを表示しています。
-            </p>
-          </div>
           <SankeyChart data={sankeyData} year={year} />
         </div>
       </div>
