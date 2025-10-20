@@ -5,7 +5,7 @@
       "name": "2019年度予算",
       "type": "total",
       "metadata": {
-        "budget": 110865069257000
+        "budget": 110865303087000
       }
     },
     {
@@ -32,7 +32,7 @@
       "type": "ministry",
       "metadata": {
         "ministry": "文部科学省",
-        "budget": 5417407106000
+        "budget": 5417641786000
       }
     },
     {
@@ -95,7 +95,7 @@
       "type": "ministry",
       "metadata": {
         "ministry": "外務省",
-        "budget": 526406205000
+        "budget": 526406355000
       }
     },
     {
@@ -167,7 +167,7 @@
       "type": "ministry",
       "metadata": {
         "ministry": "金融庁",
-        "budget": 1851000000
+        "budget": 1850000000
       }
     },
     {
@@ -203,7 +203,7 @@
     {
       "source": "total_budget",
       "target": "ministry_2",
-      "value": 5417407106000
+      "value": 5417641786000
     },
     {
       "source": "total_budget",
@@ -238,7 +238,7 @@
     {
       "source": "total_budget",
       "target": "ministry_9",
-      "value": 526406205000
+      "value": 526406355000
     },
     {
       "source": "total_budget",
@@ -278,7 +278,7 @@
     {
       "source": "total_budget",
       "target": "ministry_17",
-      "value": 1851000000
+      "value": 1850000000
     },
     {
       "source": "total_budget",

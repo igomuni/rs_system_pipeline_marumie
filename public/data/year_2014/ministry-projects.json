@@ -48,12 +48,12 @@
       },
       {
         "projectId": 1,
-        "name": "高度情報通信ネットワ-ク社会推進経費",
+        "name": "高度情報通信ネットワーク社会推進経費",
         "budget": 53000000
       }
     ],
     "othersTotal": 148400000,
-    "totalProjects": 18
+    "totalProjects": 16
   },
   "内閣府": {
     "top10": [
@@ -109,7 +109,7 @@
       }
     ],
     "othersTotal": 59170100000,
-    "totalProjects": 147
+    "totalProjects": 139
   },
   "特定個人情報保護委員会": {
     "top10": [
@@ -131,7 +131,7 @@
       },
       {
         "projectId": 170,
-        "name": "競争政策研究センタ-",
+        "name": "競争政策研究センター",
         "budget": 23400000
       },
       {
@@ -212,7 +212,7 @@
       }
     ],
     "othersTotal": 31924000000,
-    "totalProjects": 76
+    "totalProjects": 58
   },
   "金融庁": {
     "top10": [
@@ -259,7 +259,7 @@
       },
       {
         "projectId": 266,
-        "name": "独立行政法人国民生活センタ-運営費交付金",
+        "name": "独立行政法人国民生活センター運営費交付金",
         "budget": 2716540000
       },
       {
@@ -304,7 +304,7 @@
       }
     ],
     "othersTotal": 227585000,
-    "totalProjects": 17
+    "totalProjects": 16
   },
   "復興庁": {
     "top10": [
@@ -360,7 +360,7 @@
       }
     ],
     "othersTotal": 596366825000,
-    "totalProjects": 240
+    "totalProjects": 216
   },
   "総務省": {
     "top10": [
@@ -406,7 +406,7 @@
       },
       {
         "projectId": 682,
-        "name": "独立行政法人統計センタ-運営事業",
+        "name": "独立行政法人統計センター運営事業",
         "budget": 8631000000
       },
       {
@@ -416,7 +416,7 @@
       }
     ],
     "othersTotal": 57136754000,
-    "totalProjects": 172
+    "totalProjects": 134
   },
   "法務省": {
     "top10": [
@@ -437,7 +437,7 @@
       },
       {
         "projectId": 687,
-        "name": "日本司法支援センタ-の運営 (国選弁護人確保業務委託を除く)",
+        "name": "日本司法支援センターの運営 (国選弁護人確保業務委託を除く)",
         "budget": 14607000000
       },
       {
@@ -472,7 +472,7 @@
       }
     ],
     "othersTotal": 72124000000,
-    "totalProjects": 74
+    "totalProjects": 71
   },
   "外務省": {
     "top10": [
@@ -528,7 +528,7 @@
       }
     ],
     "othersTotal": 58338086000,
-    "totalProjects": 283
+    "totalProjects": 246
   },
   "財務省": {
     "top10": [
@@ -584,7 +584,7 @@
       }
     ],
     "othersTotal": 55560715104,
-    "totalProjects": 49
+    "totalProjects": 44
   },
   "文部科学省": {
     "top10": [
@@ -610,7 +610,7 @@
       },
       {
         "projectId": 1371,
-        "name": "原子力・エネルギ-教育支援事業交付金",
+        "name": "原子力・エネルギー教育支援事業交付金",
         "budget": 292100000000000
       },
       {
@@ -640,7 +640,7 @@
       }
     ],
     "othersTotal": 5377646240000,
-    "totalProjects": 446
+    "totalProjects": 391
   },
   "厚生労働省": {
     "top10": [
@@ -696,7 +696,7 @@
       }
     ],
     "othersTotal": 6711752743000,
-    "totalProjects": 979
+    "totalProjects": 874
   },
   "農林水産省": {
     "top10": [
@@ -752,7 +752,7 @@
       }
     ],
     "othersTotal": 899233823000,
-    "totalProjects": 346
+    "totalProjects": 267
   },
   "経済産業省": {
     "top10": [
@@ -788,7 +788,7 @@
       },
       {
         "projectId": 3226,
-        "name": "エネルギ-使用合理化等事業者支援補助金 (民間団体等分)",
+        "name": "エネルギー使用合理化等事業者支援補助金 (民間団体等分)",
         "budget": 41000000000
       },
       {
@@ -798,17 +798,17 @@
       },
       {
         "projectId": 3221,
-        "name": "クリ-ンエネルギ-自動車等導入促進対策費補助金",
+        "name": "クリーンエネルギー自動車等導入促進対策費補助金",
         "budget": 30000000000
       },
       {
         "projectId": 3315,
-        "name": "再生可能エネルギ-固定価格買取制度施行事業費補助金",
+        "name": "再生可能エネルギー固定価格買取制度施行事業費補助金",
         "budget": 29000000000
       }
     ],
     "othersTotal": 652166200000,
-    "totalProjects": 623
+    "totalProjects": 479
   },
   "国土交通省": {
     "top10": [
@@ -864,7 +864,7 @@
       }
     ],
     "othersTotal": 1301494203000,
-    "totalProjects": 468
+    "totalProjects": 403
   },
   "環境省": {
     "top10": [
@@ -875,7 +875,7 @@
       },
       {
         "projectId": 3961,
-        "name": "再生可能エネルギ-等導入推進基金事業 (グリ-ンニュ-ディ-ル基金)",
+        "name": "再生可能エネルギー等導入推進基金事業 (グリーンニューディール基金)",
         "budget": 22000000000
       },
       {
@@ -920,7 +920,7 @@
       }
     ],
     "othersTotal": 76479025000,
-    "totalProjects": 333
+    "totalProjects": 291
   },
   "原子力規制委員会": {
     "top10": [
@@ -976,7 +976,7 @@
       }
     ],
     "othersTotal": 10889718000,
-    "totalProjects": 60
+    "totalProjects": 48
   },
   "原子力規制員会": {
     "top10": [
@@ -1043,6 +1043,6 @@
       }
     ],
     "othersTotal": 1687131920000,
-    "totalProjects": 394
+    "totalProjects": 343
   }
 }
