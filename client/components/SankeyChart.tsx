@@ -17,6 +17,17 @@ export default function SankeyChart({ data, year }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<D3SankeyNode | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  // ダークモードの検出
+  useEffect(() => {
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    setIsDarkMode(darkModeMediaQuery.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    darkModeMediaQuery.addEventListener('change', handler);
+    return () => darkModeMediaQuery.removeEventListener('change', handler);
+  }, []);
 
   // 金額を適切な単位でフォーマット
   const formatAmount = (amount: number): string => {
@@ -228,7 +239,7 @@ export default function SankeyChart({ data, year }: Props) {
         .attr('text-anchor', textAnchor)
         .text(name)
         .attr('font-size', nameFontSize)
-        .attr('fill', '#333')
+        .attr('fill', isDarkMode ? '#e5e7eb' : '#333')
         .style('pointer-events', 'none');
 
       // 金額を表示
@@ -239,11 +250,11 @@ export default function SankeyChart({ data, year }: Props) {
           .attr('text-anchor', textAnchor)
           .text(formatAmount(d.value))
           .attr('font-size', amountFontSize)
-          .attr('fill', '#666')
+          .attr('fill', isDarkMode ? '#9ca3af' : '#666')
           .style('pointer-events', 'none');
       }
     });
-  }, [data, year]);
+  }, [data, year, isDarkMode, router]);
 
   return (
     <div className="space-y-4">
@@ -252,9 +263,9 @@ export default function SankeyChart({ data, year }: Props) {
       </div>
 
       {selectedNode && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="font-semibold text-lg mb-2">選択中のノード</h3>
-          <div className="space-y-1 text-sm">
+        <div className="bg-blue-50 dark:bg-gray-700 border border-blue-200 dark:border-gray-600 rounded-lg p-4">
+          <h3 className="font-semibold text-lg mb-2 text-gray-900 dark:text-white">選択中のノード</h3>
+          <div className="space-y-1 text-sm text-gray-900 dark:text-gray-200">
             <p>
               <span className="font-medium">名前:</span> {selectedNode.name}
             </p>
@@ -282,7 +293,7 @@ export default function SankeyChart({ data, year }: Props) {
           </div>
           <button
             onClick={() => setSelectedNode(null)}
-            className="mt-3 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+            className="mt-3 px-3 py-1 bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 text-sm"
           >
             閉じる
           </button>

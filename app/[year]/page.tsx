@@ -106,41 +106,41 @@ export default async function YearPage({ params, searchParams }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 行政事業レビュー
               </h1>
               <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
             </div>
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">予算:</span>
-                <span className="text-sm font-bold">
+                <span className="text-xs text-gray-600 dark:text-gray-400">予算:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">執行額:</span>
-                <span className="text-sm font-bold">
+                <span className="text-xs text-gray-600 dark:text-gray-400">執行額:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
               {year === 2024 && (
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600">執行率:</span>
-                  <span className="text-sm font-bold">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
                     {(statistics.averageExecutionRate * 100).toFixed(1)}%
                   </span>
                 </div>
               )}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">事業数:</span>
-                <span className="text-sm font-bold">{statistics.eventCount}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount}</span>
               </div>
             </div>
           </div>
@@ -149,20 +149,20 @@ export default async function YearPage({ params, searchParams }: Props) {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           {/* Breadcrumbs */}
-          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-blue-600">
+          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
               ホーム
             </Link>
             <span>/</span>
-            <Link href={`/${year}`} className="hover:text-blue-600">
+            <Link href={`/${year}`} className="hover:text-blue-600 dark:hover:text-blue-400">
               {year}年度
             </Link>
             {resolvedSearchParams.ministry && (
               <>
                 <span>/</span>
-                <span className="text-gray-900">{resolvedSearchParams.ministry}</span>
+                <span className="text-gray-900 dark:text-white">{resolvedSearchParams.ministry}</span>
               </>
             )}
           </nav>
@@ -171,8 +171,8 @@ export default async function YearPage({ params, searchParams }: Props) {
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 bg-white border-t">
-        <div className="container mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+      <footer className="mt-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+        <div className="container mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400 text-sm">
           <p>
             データソース:{' '}
             <a

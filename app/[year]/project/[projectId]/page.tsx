@@ -73,40 +73,40 @@ export default async function ProjectPage({ params }: Props) {
   // 支出データがない場合は、予算情報のみ表示
   if (!projectData) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <header className="bg-white dark:bg-gray-800 shadow-sm">
           <div className="container mx-auto px-4 py-3">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
-                <h1 className="text-xl sm:text-2xl font-bold">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                   行政事業レビュー
                 </h1>
                 <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
               </div>
               <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600">予算:</span>
-                  <span className="text-sm font-bold">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">予算:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
                     {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600">執行額:</span>
-                  <span className="text-sm font-bold">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">執行額:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
                     {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
                   </span>
                 </div>
                 {year === 2024 && (
                   <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-600">執行率:</span>
-                    <span className="text-sm font-bold">
+                    <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
                       {(statistics.averageExecutionRate * 100).toFixed(1)}%
                     </span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600">事業数:</span>
-                  <span className="text-sm font-bold">{statistics.eventCount}</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount}</span>
                 </div>
               </div>
             </div>
@@ -114,14 +114,14 @@ export default async function ProjectPage({ params }: Props) {
         </header>
 
         <div className="container mx-auto px-4 py-6">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             {/* Breadcrumbs */}
-            <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-              <Link href="/" className="hover:text-blue-600">
+            <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
                 ホーム
               </Link>
               <span>/</span>
-              <Link href={`/${year}`} className="hover:text-blue-600">
+              <Link href={`/${year}`} className="hover:text-blue-600 dark:hover:text-blue-400">
                 {year}年度
               </Link>
               {ministryName && (
@@ -129,24 +129,24 @@ export default async function ProjectPage({ params }: Props) {
                   <span>/</span>
                   <Link
                     href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
-                    className="hover:text-blue-600"
+                    className="hover:text-blue-600 dark:hover:text-blue-400"
                   >
                     {ministryName}
                   </Link>
                 </>
               )}
               <span>/</span>
-              <span className="text-gray-900">{projectName}</span>
+              <span className="text-gray-900 dark:text-white">{projectName}</span>
             </nav>
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">
               <p className="text-lg font-medium">支出先データが存在しません</p>
               <p className="text-sm mt-2">この事業の支出先情報は公開されていません。</p>
             </div>
           </div>
         </div>
 
-        <footer className="mt-16 bg-white border-t">
-          <div className="container mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+        <footer className="mt-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+          <div className="container mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400 text-sm">
             <p>
               データソース:{' '}
               <a
@@ -243,41 +243,41 @@ export default async function ProjectPage({ params }: Props) {
   const sankeyData = { nodes, links };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white dark:bg-gray-800 shadow-sm">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <h1 className="text-xl sm:text-2xl font-bold">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                 行政事業レビュー
               </h1>
               <YearSelector currentYear={year} availableYears={AVAILABLE_YEARS} />
             </div>
             <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">予算:</span>
-                <span className="text-sm font-bold">
+                <span className="text-xs text-gray-600 dark:text-gray-400">予算:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {(statistics.totalBudget / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">執行額:</span>
-                <span className="text-sm font-bold">
+                <span className="text-xs text-gray-600 dark:text-gray-400">執行額:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">
                   {(statistics.totalExecution / 1000000000000).toFixed(1)}兆円
                 </span>
               </div>
               {year === 2024 && (
                 <div className="flex items-center gap-1">
-                  <span className="text-xs text-gray-600">執行率:</span>
-                  <span className="text-sm font-bold">
+                  <span className="text-xs text-gray-600 dark:text-gray-400">執行率:</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
                     {(statistics.averageExecutionRate * 100).toFixed(1)}%
                   </span>
                 </div>
               )}
               <div className="flex items-center gap-1">
-                <span className="text-xs text-gray-600">事業数:</span>
-                <span className="text-sm font-bold">{statistics.eventCount}</span>
+                <span className="text-xs text-gray-600 dark:text-gray-400">事業数:</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{statistics.eventCount}</span>
               </div>
             </div>
           </div>
@@ -286,14 +286,14 @@ export default async function ProjectPage({ params }: Props) {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           {/* Breadcrumbs */}
-          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-blue-600">
+          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
               ホーム
             </Link>
             <span>/</span>
-            <Link href={`/${year}`} className="hover:text-blue-600">
+            <Link href={`/${year}`} className="hover:text-blue-600 dark:hover:text-blue-400">
               {year}年度
             </Link>
             {ministryName && (
@@ -301,22 +301,22 @@ export default async function ProjectPage({ params }: Props) {
                 <span>/</span>
                 <Link
                   href={`/${year}?ministry=${encodeURIComponent(ministryName)}`}
-                  className="hover:text-blue-600"
+                  className="hover:text-blue-600 dark:hover:text-blue-400"
                 >
                   {ministryName}
                 </Link>
               </>
             )}
             <span>/</span>
-            <span className="text-gray-900">{projectData.projectName}</span>
+            <span className="text-gray-900 dark:text-white">{projectData.projectName}</span>
           </nav>
           <SankeyChart data={sankeyData} year={year} />
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="mt-16 bg-white border-t">
-        <div className="container mx-auto px-4 py-6 text-center text-gray-600 text-sm">
+      <footer className="mt-16 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
+        <div className="container mx-auto px-4 py-6 text-center text-gray-600 dark:text-gray-400 text-sm">
           <p>
             データソース:{' '}
             <a
