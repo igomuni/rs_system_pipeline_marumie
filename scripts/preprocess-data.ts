@@ -6,6 +6,7 @@ import path from 'path';
 import { parse } from 'csv-parse/sync';
 import type { Year } from '../types/rs-system';
 import type { SankeyData } from '../types/sankey';
+import type { ProjectTimeSeriesData, ProjectIndexItem, ExpenditureTimeSeries } from '../types/report';
 
 const DATA_BASE_PATH = path.join(process.cwd(), 'data', 'rs_system');
 const OUTPUT_BASE_PATH = path.join(process.cwd(), 'public', 'data');
@@ -500,6 +501,252 @@ function extractMinistries(budgetData: any[], year: Year): Array<{ name: string;
 }
 
 /**
+ * 年度のCSVデータを読み込む（1-2, 2-1, 5-1）
+ */
+async function loadYearData(year: Year): Promise<[any[], any[], any[]]> {
+  const yearDir = path.join(DATA_BASE_PATH, `year_${year}`);
+
+  const overviewFileName = year === 2024
+    ? `1-2_RS_${year}_基本情報_事業概要等.csv`
+    : `1-2_${year}_基本情報_事業概要.csv`;
+
+  const budgetFileName = year === 2024
+    ? `2-1_RS_${year}_予算・執行_サマリ.csv`
+    : `2-1_${year}_予算・執行_サマリ.csv`;
+
+  const expenditureFileName = year === 2024
+    ? `5-1_RS_${year}_支出先_支出情報.csv`
+    : `5-1_${year}_支出先_支出情報.csv`;
+
+  const [overviewData, budgetData, expenditureData] = await Promise.all([
+    parseCSV(path.join(yearDir, overviewFileName)),
+    parseCSV(path.join(yearDir, budgetFileName)),
+    parseCSV(path.join(yearDir, expenditureFileName)),
+  ]);
+
+  return [overviewData, budgetData, expenditureData];
+}
+
+/**
+ * 事業名からURLセーフなキーを生成（MD5ハッシュ）
+ */
+function generateProjectKey(projectName: string): string {
+  const crypto = require('crypto');
+  // 事業名のMD5ハッシュを生成（短く一意なキー）
+  return crypto.createHash('md5').update(projectName, 'utf-8').digest('hex');
+}
+
+/**
+ * 全年度のデータを集約して事業別時系列データを生成（事業名がキー）
+ */
+async function generateProjectTimeSeriesData() {
+  console.log('\nGenerating project time series data...');
+
+  // 1. 全年度のデータを読み込み
+  const allYearsOverviewData = new Map<Year, any[]>();
+  const allYearsBudgetData = new Map<Year, any[]>();
+  const allYearsExpenditureData = new Map<Year, any[]>();
+
+  for (const year of AVAILABLE_YEARS) {
+    const exists = await checkYearDirectoryExists(year);
+    if (!exists) continue;
+
+    const [overviewData, budgetData, expenditureData] = await loadYearData(year);
+    allYearsOverviewData.set(year, overviewData);
+    allYearsBudgetData.set(year, budgetData);
+    allYearsExpenditureData.set(year, expenditureData);
+  }
+
+  // 2. 事業名単位で集約（事業名がキー）
+  const projectMap = new Map<string, any>();
+
+  for (const [year, budgetData] of allYearsBudgetData) {
+    // 予算年度でフィルター
+    const currentYearData = budgetData.filter((b: any) => b.予算年度 === year);
+
+    currentYearData.forEach((budget: any) => {
+      const projectName = budget.事業名;
+      const projectId = budget.予算事業ID;
+      const ministry = budget.府省庁;
+
+      if (!projectName || !projectId) return;
+
+      if (!projectMap.has(projectName)) {
+        projectMap.set(projectName, {
+          projectName,
+          projectKey: generateProjectKey(projectName),
+          ministry,
+          startYear: null,
+          endYear: null,
+          yearlyData: {},
+          _expenditureMap: new Map<string, any>(),
+        });
+      }
+
+      const project = projectMap.get(projectName)!;
+
+      const rawBudget = budget['当初予算(合計)'] || budget['当初予算（合計）'];
+      const rawExecution = budget['執行額(合計)'] || budget['執行額（合計）'];
+
+      // 空文字列や0の場合はスキップ（2024年は複数行あり、空行で上書きされるのを防ぐ）
+      const budgetAmount = rawBudget && rawBudget !== '' ? normalizeAmount(rawBudget, year) : 0;
+      const executionAmount = rawExecution && rawExecution !== '' ? normalizeAmount(rawExecution, year) : 0;
+
+      // 既存データがある場合は、有効な値がある場合のみ更新
+      const existingData = project.yearlyData[year];
+      if (existingData) {
+        // 既存の予算が0で新しい予算が正の値なら更新
+        if (existingData.budget === 0 && budgetAmount > 0) {
+          existingData.budget = budgetAmount;
+        }
+        // 既存の執行額が0で新しい執行額が正の値なら更新
+        if (existingData.execution === 0 && executionAmount > 0) {
+          existingData.execution = executionAmount;
+        }
+        // 執行率がある場合は常に更新（より詳細な情報を持つ行を優先）
+        if (budget.執行率) {
+          existingData.executionRate = budget.執行率;
+        }
+      } else {
+        // 新規データの場合はそのまま設定
+        project.yearlyData[year] = {
+          projectId,
+          budget: budgetAmount,
+          execution: executionAmount,
+          executionRate: budget.執行率,
+        };
+      }
+    });
+  }
+
+  // 3. 1-2から開始年度・終了年度を取得（新しい年度を優先）
+  // 年度を降順（新しい→古い）にソート
+  const sortedYearsOverviewData = [...allYearsOverviewData].sort((a, b) => b[0] - a[0]);
+
+  for (const [year, overviewData] of sortedYearsOverviewData) {
+    overviewData.forEach((overview: any) => {
+      const projectName = overview.事業名;
+      if (!projectName || !projectMap.has(projectName)) return;
+
+      const project = projectMap.get(projectName)!;
+
+      // 開始年度を設定（新しい年度のデータを優先、まだ設定されていない場合のみ）
+      if (project.startYear === null && overview.事業開始年度) {
+        const startYear = Number(overview.事業開始年度);
+        if (!isNaN(startYear) && startYear >= 2000 && startYear <= 2030) {
+          project.startYear = startYear;
+        }
+      }
+
+      // 終了年度を設定（新しい年度のデータを優先、まだ設定されていない場合のみ）
+      if (project.endYear === null && (overview['事業終了（予定）年度'] || overview['事業終了(予定)年度'])) {
+        const endYear = Number(overview['事業終了（予定）年度'] || overview['事業終了(予定)年度']);
+        if (!isNaN(endYear) && endYear >= 2000 && endYear <= 2050) {
+          project.endYear = endYear;
+        }
+      }
+    });
+  }
+
+  // 4. 支出先データを集約
+  for (const [year, expenditureData] of allYearsExpenditureData) {
+    // 事業年度でフィルター
+    const currentYearData = expenditureData.filter((e: any) => e.事業年度 === year);
+
+    currentYearData.forEach((exp: any) => {
+      const projectName = exp.事業名;
+      if (!projectName || !projectMap.has(projectName)) return;
+
+      const project = projectMap.get(projectName)!;
+      const expenditureName = exp.支出先名;
+
+      // 金額の取得（年度により異なるフィールド名）
+      const amount = year === 2024
+        ? (exp.金額 || 0)
+        : normalizeAmount(exp['支出額（百万円）'] || exp.支出額 || 0, year);
+
+      if (!expenditureName || !amount) return;
+
+      if (!project._expenditureMap.has(expenditureName)) {
+        project._expenditureMap.set(expenditureName, {
+          name: expenditureName,
+          totalAmount: 0,
+          yearCount: 0,
+          yearlyAmounts: {},
+        });
+      }
+
+      const expData = project._expenditureMap.get(expenditureName)!;
+      expData.totalAmount += amount;
+
+      if (!expData.yearlyAmounts[year]) {
+        expData.yearlyAmounts[year] = 0;
+        expData.yearCount++;
+      }
+      expData.yearlyAmounts[year] += amount;
+    });
+  }
+
+  // 5. 各事業のTop10支出先を抽出
+  projectMap.forEach((project) => {
+    if (project._expenditureMap) {
+      const sorted = Array.from(project._expenditureMap.values())
+        .sort((a: any, b: any) => b.totalAmount - a.totalAmount);
+
+      project.topExpenditures = sorted.slice(0, 10);
+      delete project._expenditureMap;
+    } else {
+      project.topExpenditures = [];
+    }
+  });
+
+  // 6. インデックスファイルを生成
+  const projectIndex: ProjectIndexItem[] = Array.from(projectMap.values())
+    .map((p: any) => {
+      const years = Object.keys(p.yearlyData).map(Number).sort((a, b) => a - b);
+      const totalBudget = years.reduce((sum, year) =>
+        sum + (p.yearlyData[year]?.budget || 0), 0);
+
+      return {
+        projectKey: p.projectKey,
+        projectName: p.projectName,
+        ministry: p.ministry,
+        startYear: p.startYear,
+        endYear: p.endYear,
+        dataStartYear: years[0] as Year,
+        dataEndYear: years[years.length - 1] as Year,
+        totalBudget,
+        averageBudget: totalBudget / years.length,
+      };
+    })
+    .sort((a, b) => b.totalBudget - a.totalBudget);
+
+  // 7. ファイル出力
+  const projectsDir = path.join(OUTPUT_BASE_PATH, 'projects');
+  await fs.mkdir(projectsDir, { recursive: true });
+
+  // インデックスファイル
+  await fs.writeFile(
+    path.join(OUTPUT_BASE_PATH, 'project-index.json'),
+    JSON.stringify(projectIndex, null, 2)
+  );
+
+  console.log(`  ✓ Generated project index: ${projectIndex.length} projects`);
+
+  // 事業別詳細ファイル（projectKeyをファイル名に使用）
+  const writePromises = Array.from(projectMap.values()).map((project: any) =>
+    fs.writeFile(
+      path.join(projectsDir, `${project.projectKey}.json`),
+      JSON.stringify(project, null, 2)
+    )
+  );
+
+  await Promise.all(writePromises);
+
+  console.log(`  ✓ Generated ${projectMap.size} project detail files`);
+}
+
+/**
  * メイン処理
  */
 async function main() {
@@ -513,6 +760,9 @@ async function main() {
       console.log(`Skipping year ${year} (directory not found)`);
     }
   }
+
+  // レポート用の時系列データを生成
+  await generateProjectTimeSeriesData();
 
   console.log('\n✓ Data preprocessing completed!');
 }

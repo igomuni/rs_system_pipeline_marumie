@@ -19,7 +19,7 @@ export default async function HomePage() {
 
       <main>
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">年度を選択</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">年度別サンキー図</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {AVAILABLE_YEARS.map((year) => {
               const isAvailable = availableYears.includes(year);
@@ -45,6 +45,21 @@ export default async function HomePage() {
               );
             })}
           </div>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">事業別レポート</h2>
+          <Link
+            href="/reports"
+            className="block p-6 text-center rounded-lg border-2 border-green-500 dark:border-green-400 hover:bg-green-50 dark:hover:bg-gray-700 hover:shadow-lg cursor-pointer transition-all"
+          >
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              事業レポートを見る
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">
+              事業ごとの予算推移・支出先分析
+            </div>
+          </Link>
         </section>
 
         <section className="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
