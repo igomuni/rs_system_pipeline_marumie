@@ -96,9 +96,16 @@ cd rs_system_pipeline_marumie
 npm install
 ```
 
-3. データの確認:
+3. データファイルのダウンロード:
 
-`data/rs_system/` ディレクトリに年度別のCSVファイルが配置されていることを確認してください。
+[GitHub Releases](https://github.com/igomuni/rs_system_pipeline_marumie/releases)から最新の `rs_system_data_2014-2024.tar.gz` をダウンロードし、プロジェクトルートで解凍します。
+
+```bash
+# ダウンロード後
+tar -xzf rs_system_data_2014-2024.tar.gz
+```
+
+これにより、`data/rs_system/` ディレクトリに年度別（2014-2024）のCSVファイルが配置されます（約90MB圧縮時、解凍後約350MB）。
 
 4. データの前処理（初回のみ）:
 
