@@ -48,3 +48,5 @@ next-env.d.ts
 *.njsproj
 *.sln
 *.sw?
+
+public/data*/projects

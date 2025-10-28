@@ -124,9 +124,16 @@ public/data/            # Preprocessed JSON files (generated)
 
 ### Year-specific File Naming
 
-- 2024: `{番号}_RS_{年度}_{名称}.csv` (e.g., `5-1_RS_2024_支出先_支出情報.csv`)
-- 2014-2023: `{番号}_{年度}_{名称}.csv` (e.g., `5-1_2023_支出先_支出情報.csv`)
+**Updated 2024-10-28**: 2024 data files now use the same naming pattern as 2014-2023 (without `RS_` prefix)
+
+- **All years (2014-2024)**: `{番号}_{年度}_{名称}.csv`
+  - Example: `5-1_2024_支出先_支出情報.csv`
+  - Exception: 1-2 file for 2024 uses「事業概要等」instead of「事業概要」
+    - 2024: `1-2_2024_基本情報_事業概要等.csv`
+    - 2014-2023: `1-2_{年度}_基本情報_事業概要.csv`
 - 5-2 file (expenditure connections) only exists for 2024
+
+**Note**: CSV field names may use either half-width `(合計)` or full-width `（合計）` parentheses. The preprocessing script handles both formats.
 
 ## Design Documentation
 

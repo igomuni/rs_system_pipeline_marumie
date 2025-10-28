@@ -69,16 +69,11 @@ async function processYearData(year: Year) {
   const yearDir = path.join(DATA_BASE_PATH, `year_${year}`);
 
   // 必要なCSVファイルを読み込む
-  const budgetFileName = year === 2024
-    ? `2-1_RS_${year}_予算・執行_サマリ.csv`
-    : `2-1_${year}_予算・執行_サマリ.csv`;
-
-  const expenditureFileName = year === 2024
-    ? `5-1_RS_${year}_支出先_支出情報.csv`
-    : `5-1_${year}_支出先_支出情報.csv`;
-
+  // 2024年は RS_ プレフィックスなしの形式
+  const budgetFileName = `2-1_${year}_予算・執行_サマリ.csv`;
+  const expenditureFileName = `5-1_${year}_支出先_支出情報.csv`;
   const connectionFileName = year === 2024
-    ? `5-2_RS_${year}_支出先_支出ブロックのつながり.csv`
+    ? `5-2_${year}_支出先_支出ブロックのつながり.csv`
     : null;
 
   const [budgetData, expenditureData, connectionData] = await Promise.all([
@@ -506,17 +501,12 @@ function extractMinistries(budgetData: any[], year: Year): Array<{ name: string;
 async function loadYearData(year: Year): Promise<[any[], any[], any[]]> {
   const yearDir = path.join(DATA_BASE_PATH, `year_${year}`);
 
+  // 2024年は RS_ プレフィックスなし、かつ「事業概要等」の形式
   const overviewFileName = year === 2024
-    ? `1-2_RS_${year}_基本情報_事業概要等.csv`
+    ? `1-2_${year}_基本情報_事業概要等.csv`
     : `1-2_${year}_基本情報_事業概要.csv`;
-
-  const budgetFileName = year === 2024
-    ? `2-1_RS_${year}_予算・執行_サマリ.csv`
-    : `2-1_${year}_予算・執行_サマリ.csv`;
-
-  const expenditureFileName = year === 2024
-    ? `5-1_RS_${year}_支出先_支出情報.csv`
-    : `5-1_${year}_支出先_支出情報.csv`;
+  const budgetFileName = `2-1_${year}_予算・執行_サマリ.csv`;
+  const expenditureFileName = `5-1_${year}_支出先_支出情報.csv`;
 
   const [overviewData, budgetData, expenditureData] = await Promise.all([
     parseCSV(path.join(yearDir, overviewFileName)),
