@@ -10,18 +10,20 @@ This is a Next.js web application that visualizes Japanese government budget dat
 
 ### Development
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production (includes data preprocessing)
-npm run start        # Start production server
-npm run preprocess   # Preprocess CSV data to JSON (run before first build)
-npm run typecheck    # Run TypeScript type checking
-npm run lint         # Run ESLint
+npm run dev           # Start development server
+npm run build         # Build for production (auto-downloads preprocessed JSON)
+npm run start         # Start production server
+npm run download-data # Download project JSON from GitHub Release (auto in build)
+npm run preprocess    # Preprocess CSV data to JSON (development only)
+npm run typecheck     # Run TypeScript type checking
+npm run lint          # Run ESLint
 ```
 
 ### Important Notes
 - **Always run `npm run typecheck` and `npm run lint` before pushing logic changes**
-- Data preprocessing converts large CSV files (~150MB) to optimized JSON (~11KB per year)
-- The `build` command automatically runs preprocessing
+- The `build` command automatically downloads preprocessed project files (5.1MB) from GitHub Release
+- Project files (12,573 JSON, 52MB) are NOT committed to git - downloaded during build
+- CSV preprocessing is only needed during development when updating data
 
 ## Architecture Overview
 

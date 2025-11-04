@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run preprocess && next build",
+    "build": "npm run download-data && next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "preprocess": "tsx scripts/preprocess-data.ts"
+    "preprocess": "tsx scripts/preprocess-data.ts",
+    "download-data": "node scripts/download-data.js"
   },
   "dependencies": {
     "csv-parse": "^5.5.6",

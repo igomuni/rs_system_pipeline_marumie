@@ -49,5 +49,6 @@ next-env.d.ts
 *.sln
 *.sw?
 
-public/data*/projects
+# Generated project files (too many to commit, generated during build)
+public/data/projects/
 *.tar.gz

@@ -96,24 +96,22 @@ cd rs_system_pipeline_marumie
 npm install
 ```
 
-3. データファイルのダウンロード:
+3. プロジェクトデータのダウンロード（オプション）:
 
-[GitHub Releases](https://github.com/igomuni/rs_system_pipeline_marumie/releases)から最新の `rs_system_data_2014-2024.tar.gz` をダウンロードし、プロジェクトルートで解凍します。
+**開発環境の場合**: [GitHub Releases](https://github.com/igomuni/rs_system_pipeline_marumie/releases)から `projects_data.tar.gz` をダウンロードし、`public/data/` で解凍します。
 
 ```bash
 # ダウンロード後
-tar -xzf rs_system_data_2014-2024.tar.gz
+tar -xzf projects_data.tar.gz -C public/data/
 ```
 
-これにより、`data/rs_system/` ディレクトリに年度別（2014-2024）のCSVファイルが配置されます（圧縮時約90MB、解凍後約930MB）。
+これにより、`public/data/projects/` ディレクトリに12,573事業のJSONファイルが配置されます（圧縮時5.1MB、解凍後52MB）。
 
-4. データの前処理（初回のみ）:
+**Vercelなどのデプロイ環境**: ビルド時に自動的にダウンロード・解凍されます（`npm run build`実行時）。
 
-```bash
-npm run preprocess
-```
-
-このコマンドにより、CSVデータが最適化されたJSON形式に変換されます（`public/data/`に保存）。
+**Note**:
+- CSVからの前処理は開発時のみ必要（`npm run preprocess`）
+- デプロイ時は前処理済みJSONを直接ダウンロードするため高速
 
 ### 開発サーバーの起動
 
