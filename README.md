@@ -63,7 +63,8 @@ rs_system_pipeline_marumie/
 │   ├── sankey.ts              # サンキー図の型
 │   └── report.ts              # レポートの型
 ├── scripts/                    # ビルドスクリプト
-│   └── preprocess-data.ts     # データ前処理スクリプト
+│   ├── preprocess-data.ts     # データ前処理スクリプト
+│   └── download-data.js       # GitHub Releaseからデータダウンロード
 ├── data/                       # 元データディレクトリ
 │   └── rs_system/
 │       └── year_YYYY/         # 年度別CSVデータ
@@ -98,7 +99,15 @@ npm install
 
 3. プロジェクトデータのダウンロード（オプション）:
 
-**開発環境の場合**: [GitHub Releases](https://github.com/igomuni/rs_system_pipeline_marumie/releases)から `projects_data.tar.gz` をダウンロードし、`public/data/` で解凍します。
+**開発環境の場合**: 以下のいずれかの方法でデータを取得します。
+
+方法1: 自動ダウンロード（推奨）
+```bash
+npm run download-data
+```
+
+方法2: 手動ダウンロード
+[GitHub Releases](https://github.com/igomuni/rs_system_pipeline_marumie/releases)から `projects_data.tar.gz` をダウンロードし、`public/data/` で解凍します。
 
 ```bash
 # ダウンロード後
@@ -153,14 +162,14 @@ npm run dev
 
 ## ビルド
 
-プロダクション用のビルド（データ前処理を含む）:
+プロダクション用のビルド:
 
 ```bash
 npm run build
 npm run start
 ```
 
-**注意**: `npm run build` は自動的に `npm run preprocess` を実行してデータを前処理します。
+**注意**: `npm run build` は自動的に `npm run download-data` を実行してGitHub Releaseから前処理済みデータをダウンロードします。CSVから直接前処理する場合は `npm run preprocess` を手動で実行してください。
 
 ### パフォーマンス最適化
 

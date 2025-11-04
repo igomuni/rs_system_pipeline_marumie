@@ -6,6 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Next.js web application that visualizes Japanese government budget data (行政事業レビュー) from 2014-2024 using Sankey diagrams. It shows the flow of funds from ministries to expenditure destinations.
 
+### Key Features
+- **Sankey Diagram Visualization**: Intuitive flow visualization from ministries to expenditure destinations
+- **Year Selection**: Browse data from 2014-2024
+- **Ministry Filtering**: Filter by specific ministry
+- **Interactive UI**: Hover for details on nodes and links
+- **Statistics Dashboard**: Budget totals, execution amounts, and execution rates
+- **Project Reports**: 13,262 projects with search, filtering, and time-series analysis
+  - Fuzzy search using Fuse.js
+  - Budget trend charts (Recharts)
+  - Top 10 expenditure destinations
+  - Time-series charts by expenditure destination
+
 ## Key Commands
 
 ### Development
@@ -58,16 +70,28 @@ This application uses a **build-time preprocessing strategy** for optimal perfor
 ```
 app/                    # Next.js App Router
   ├── [year]/page.tsx   # Year-specific visualization page
+  ├── reports/          # Project reports feature
+  │   ├── [projectKey]/ # Individual project detail pages
+  │   └── page.tsx      # Project list page (13,262 projects)
   └── page.tsx          # Top page with year selector
 
 client/                 # Client-side components ("use client")
-  └── components/
-      ├── SankeyChart.tsx    # D3.js Sankey visualization
-      └── YearSelector.tsx   # Year selection UI
+  ├── components/
+  │   ├── reports/      # Project report components
+  │   │   ├── BudgetTrendChart.tsx          # Budget trend visualization
+  │   │   ├── ExpenditureTopList.tsx        # Top 10 expenditure list
+  │   │   ├── ExpenditureTimeSeriesChart.tsx # Time-series chart
+  │   │   ├── ProjectSearchInterface.tsx    # Search UI with Fuse.js
+  │   │   └── ProjectTable.tsx              # Project list table
+  │   ├── SankeyChart.tsx    # D3.js Sankey visualization
+  │   └── YearSelector.tsx   # Year selection UI
+  └── lib/
+      └── formatBudget.ts # Budget formatting utilities (trillion/billion/10k yen)
 
 server/                 # Server-side logic (import "server-only")
   ├── loaders/          # Data loading entry points
-  │   └── data-loader.ts     # Load Sankey data, statistics, ministry lists
+  │   ├── data-loader.ts   # Load Sankey data, statistics, ministry lists
+  │   └── report-loader.ts # Load project reports (server-only)
   ├── repositories/     # Data access layer
   │   └── csv-repository.ts  # CSV file access (used in dev/legacy)
   ├── lib/              # Business logic
@@ -77,17 +101,24 @@ server/                 # Server-side logic (import "server-only")
 
 types/                  # TypeScript type definitions
   ├── rs-system.ts      # Government budget data types
-  └── sankey.ts         # Sankey diagram types
+  ├── sankey.ts         # Sankey diagram types
+  └── report.ts         # Project report types
 
 scripts/                # Build-time scripts
-  └── preprocess-data.ts # CSV → JSON preprocessing
+  ├── preprocess-data.ts # CSV → JSON preprocessing (Sankey + Reports)
+  └── download-data.js   # Download preprocessed data from GitHub Release
 
-public/data/            # Preprocessed JSON files (generated)
-  └── year_YYYY/
-      ├── sankey.json
-      ├── statistics.json
-      ├── ministries.json
-      └── ministry-projects.json
+data/rs_system/         # Raw CSV data (NOT committed)
+  └── year_YYYY/        # Year-specific CSV files
+
+public/data/            # Preprocessed JSON files (generated, NOT committed)
+  ├── year_YYYY/        # Sankey diagram data
+  │   ├── sankey.json
+  │   ├── statistics.json
+  │   ├── ministries.json
+  │   └── ministry-projects.json
+  ├── projects/         # 13,262 individual project JSON files (52MB)
+  └── project-index.json # Project index for search/list
 ```
 
 ## Code Organization Rules
@@ -167,7 +198,8 @@ Detailed design documentation is in `docs/`:
 - **Framework**: Next.js 15 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Visualization**: D3.js + d3-sankey
+- **Visualization**: D3.js + d3-sankey, Recharts
+- **Search**: Fuse.js (fuzzy search)
 - **Data Parsing**: csv-parse
 - **Runtime**: Node.js 18+
 
@@ -180,7 +212,41 @@ Detailed design documentation is in `docs/`:
 
 ## Development Tips
 
-1. **First time setup**: Run `npm run preprocess` to generate JSON files
+1. **First time setup**: Run `npm run download-data` OR `npm run preprocess` to generate JSON files
+   - `download-data`: Fast (downloads 5.1MB from GitHub Release, extracts to 52MB)
+   - `preprocess`: Slow (processes CSV files, useful when updating data)
 2. **Data changes**: Re-run preprocessing after modifying CSV files
 3. **Year filtering**: All data processing filters by `予算年度` (budget year) field
 4. **Testing locally**: Use `npm run dev` - dev server serves preprocessed JSON from `public/data/`
+
+## Important Implementation Details
+
+### Data Integrity Handling
+
+**2024 Data Multi-row Issue**:
+- 2024 CSV contains multiple rows for same project (budget data + previous year execution data)
+- Empty string rows should not overwrite existing data
+- Update logic: Only overwrite with positive values if existing data is present
+
+**Project ID Inconsistency Across Years**:
+- Same project has different IDs in different years
+- Solution: Use project name as primary key, map year-specific IDs
+- URL key: MD5 hash of project name (URL-safe, fixed length)
+
+**Project Start/End Year Reliability**:
+- Older year data (especially 2014) can be inaccurate
+- Solution: Prioritize newer year data by sorting in descending order
+
+### Preprocessing Output
+
+**Sankey Diagram Data** (`public/data/year_YYYY/`):
+- `sankey.json`: Node and link structure for D3.js
+- `statistics.json`: Pre-calculated totals (budget, execution, rates)
+- `ministries.json`: Ministry list for filtering
+- `ministry-projects.json`: Project counts per ministry
+
+**Project Report Data** (`public/data/`):
+- `projects/`: 13,262 individual JSON files (one per project)
+- `project-index.json`: Index for search and list views
+- Project key: MD5 hash of project name
+- Size: 52MB uncompressed, 5.1MB compressed (tar.gz)
