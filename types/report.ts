@@ -80,4 +80,5 @@ export interface ProjectIndexItem {
   dataEndYear: Year; // データが存在する最後の年度
   totalBudget: number; // 全期間の予算合計
   averageBudget: number; // 年平均予算
+  yearlyBudgets: Record<number, number>; // 年度別予算（フィルタリング用）
 }

@@ -2,6 +2,7 @@ import 'server-only';
 import fs from 'fs/promises';
 import path from 'path';
 import type { Year } from '@/types/rs-system';
+import { AVAILABLE_YEARS } from '@/types/rs-system';
 import type { SankeyData } from '@/types/sankey';
 
 /**
@@ -101,9 +102,9 @@ export async function getProjectExpenditures(year: Year) {
 export async function getAvailableYears(): Promise<Year[]> {
   const years: Year[] = [];
 
-  for (let year = 2014; year <= 2024; year++) {
-    if (await checkYearDataExists(year as Year)) {
-      years.push(year as Year);
+  for (const year of AVAILABLE_YEARS) {
+    if (await checkYearDataExists(year)) {
+      years.push(year);
     }
   }
 

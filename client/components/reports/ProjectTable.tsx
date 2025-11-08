@@ -1,33 +1,99 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { ProjectIndexItem } from '@/types/report';
+import type { Year } from '@/types/rs-system';
 import { formatBudget } from '@/client/lib/formatBudget';
 
 interface ProjectTableProps {
   projects: ProjectIndexItem[];
+  yearRangeStart: Year;
+  yearRangeEnd: Year;
 }
+
+type SortField = 'projectName' | 'ministry' | 'totalBudget';
+type SortOrder = 'asc' | 'desc';
 
 const ITEMS_PER_PAGE = 20;
 
-export function ProjectTable({ projects }: ProjectTableProps) {
+export function ProjectTable({ projects, yearRangeStart, yearRangeEnd }: ProjectTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>('totalBudget');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
+  // 年度範囲に基づいて総予算を計算
+  const calculateFilteredBudget = (project: ProjectIndexItem): number => {
+    let total = 0;
+    for (let year = yearRangeStart; year <= yearRangeEnd; year++) {
+      if (project.yearlyBudgets[year]) {
+        total += project.yearlyBudgets[year];
+      }
+    }
+    return total;
+  };
+
+  // ソート済みプロジェクトリスト
+  const sortedProjects = useMemo(() => {
+    const sorted = [...projects].sort((a, b) => {
+      let compareValue = 0;
+
+      if (sortField === 'totalBudget') {
+        const aTotal = calculateFilteredBudget(a);
+        const bTotal = calculateFilteredBudget(b);
+        compareValue = aTotal - bTotal;
+      } else if (sortField === 'projectName') {
+        compareValue = a.projectName.localeCompare(b.projectName, 'ja');
+      } else if (sortField === 'ministry') {
+        compareValue = a.ministry.localeCompare(b.ministry, 'ja');
+      }
+
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
+    return sorted;
+  }, [projects, sortField, sortOrder, yearRangeStart, yearRangeEnd]);
+
+  const totalPages = Math.ceil(sortedProjects.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentProjects = projects.slice(startIndex, endIndex);
+  const currentProjects = sortedProjects.slice(startIndex, endIndex);
 
-  // projectsが変更されたらページをリセット
+  // projectsまたは年度範囲が変更されたらページとソートをリセット
   useEffect(() => {
     setCurrentPage(1);
-  }, [projects]);
+    setSortField('totalBudget');
+    setSortOrder('desc');
+  }, [projects, yearRangeStart, yearRangeEnd]);
+
+  // ソート切り替え
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      // 同じフィールドをクリックしたら順序を反転
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // 新しいフィールドは降順で開始
+      setSortField(field);
+      setSortOrder('desc');
+    }
+    setCurrentPage(1); // ソート変更時はページを1に戻す
+  };
 
   // ページ変更時に先頭にスクロール
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // ソートインジケーター
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <span className="ml-1 text-gray-400">⇅</span>;
+    }
+    return sortOrder === 'asc' ? (
+      <span className="ml-1">↑</span>
+    ) : (
+      <span className="ml-1">↓</span>
+    );
   };
 
   return (
@@ -37,17 +103,26 @@ export function ProjectTable({ projects }: ProjectTableProps) {
         <table className="min-w-full bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg overflow-hidden">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                事業名
+              <th
+                onClick={() => handleSort('projectName')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+              >
+                事業名 <SortIcon field="projectName" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                府省庁
+              <th
+                onClick={() => handleSort('ministry')}
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+              >
+                府省庁 <SortIcon field="ministry" />
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 期間
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                総予算
+              <th
+                onClick={() => handleSort('totalBudget')}
+                className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors select-none"
+              >
+                総予算 <SortIcon field="totalBudget" />
               </th>
               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 詳細
@@ -71,7 +146,7 @@ export function ProjectTable({ projects }: ProjectTableProps) {
                   {project.endYear || project.dataEndYear}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-100 text-right font-medium">
-                  {formatBudget(project.totalBudget)}
+                  {formatBudget(calculateFilteredBudget(project))}
                 </td>
                 <td className="px-6 py-4 text-center">
                   <Link
@@ -172,8 +247,8 @@ export function ProjectTable({ projects }: ProjectTableProps) {
 
       {/* ページ情報 */}
       <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-        {startIndex + 1}〜{Math.min(endIndex, projects.length)} / 全
-        {projects.length}件
+        {startIndex + 1}〜{Math.min(endIndex, sortedProjects.length)} / 全
+        {sortedProjects.length}件
       </div>
     </div>
   );

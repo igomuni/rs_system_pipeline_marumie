@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Next.js web application that visualizes Japanese government budget data (行政事業レビュー) from 2014-2024 using Sankey diagrams. It shows the flow of funds from ministries to expenditure destinations.
+This is a Next.js web application that visualizes Japanese government budget data (行政事業レビュー) from 2016-2024 using Sankey diagrams. It shows the flow of funds from ministries to expenditure destinations.
 
 ### Key Features
 - **Sankey Diagram Visualization**: Intuitive flow visualization from ministries to expenditure destinations
@@ -12,11 +12,14 @@ This is a Next.js web application that visualizes Japanese government budget dat
 - **Ministry Filtering**: Filter by specific ministry
 - **Interactive UI**: Hover for details on nodes and links
 - **Statistics Dashboard**: Budget totals, execution amounts, and execution rates
-- **Project Reports**: 13,262 projects with search, filtering, and time-series analysis
+- **Project Reports**: 12,573 projects with search, filtering, and time-series analysis
   - Fuzzy search using Fuse.js
+  - Year range filtering (default: 2016-2024, recommended years)
+  - Sortable columns (project name, ministry, total budget)
   - Budget trend charts (Recharts)
   - Top 10 expenditure destinations
   - Time-series charts by expenditure destination
+  - Year range customization on detail pages
 
 ## Key Commands
 
@@ -43,9 +46,10 @@ npm run lint          # Run ESLint
 
 This application uses a **build-time preprocessing strategy** for optimal performance:
 
-1. **Raw Data** (`data/rs_system/year_YYYY/*.csv`): Government budget CSV files (2014-2024)
-   - 2014-2023: Excel-to-CSV format, amounts in millions of yen
+1. **Raw Data** (`data/rs_system/year_YYYY/*.csv`): Government budget CSV files (2016-2024, 2014-2015 available but not displayed)
+   - 2016-2023: Excel-to-CSV format, amounts in millions of yen
    - 2024: RS System CSV format, amounts in yen (1 yen unit)
+   - 2014-2015: Low data quality, excluded from display but kept for reference
 
 2. **Preprocessing** (`scripts/preprocess-data.ts`): Converts CSV to JSON at build time
    - Filters by target year (予算年度)
@@ -72,7 +76,7 @@ app/                    # Next.js App Router
   ├── [year]/page.tsx   # Year-specific visualization page
   ├── reports/          # Project reports feature
   │   ├── [projectKey]/ # Individual project detail pages
-  │   └── page.tsx      # Project list page (13,262 projects)
+  │   └── page.tsx      # Project list page (12,573 projects)
   └── page.tsx          # Top page with year selector
 
 client/                 # Client-side components ("use client")
@@ -82,7 +86,8 @@ client/                 # Client-side components ("use client")
   │   │   ├── ExpenditureTopList.tsx        # Top 10 expenditure list
   │   │   ├── ExpenditureTimeSeriesChart.tsx # Time-series chart
   │   │   ├── ProjectSearchInterface.tsx    # Search UI with Fuse.js
-  │   │   └── ProjectTable.tsx              # Project list table
+  │   │   ├── ProjectTable.tsx              # Project list table (with sorting)
+  │   │   └── ProjectDetailView.tsx         # Project detail view (with year filter)
   │   ├── SankeyChart.tsx    # D3.js Sankey visualization
   │   └── YearSelector.tsx   # Year selection UI
   └── lib/
@@ -117,8 +122,8 @@ public/data/            # Preprocessed JSON files (generated, NOT committed)
   │   ├── statistics.json
   │   ├── ministries.json
   │   └── ministry-projects.json
-  ├── projects/         # 13,262 individual project JSON files (52MB)
-  └── project-index.json # Project index for search/list
+  ├── projects/         # 12,573 individual project JSON files (52MB)
+  └── project-index.json # Project index for search/list (5.5MB, with yearlyBudgets)
 ```
 
 ## Code Organization Rules
@@ -151,9 +156,10 @@ public/data/            # Preprocessed JSON files (generated, NOT committed)
 
 ### Data Normalization
 
-**Critical**: 2014-2023 data uses **millions of yen**, 2024 uses **yen** (1 yen unit)
+**Critical**: 2016-2023 data uses **millions of yen**, 2024 uses **yen** (1 yen unit)
 - Always use `normalizeAmount(amount, year)` when processing budget amounts
 - Preprocessing script handles this conversion automatically
+- Note: 2014-2015 data exists but is excluded from display due to low quality
 
 ### Year-specific File Naming
 
@@ -246,7 +252,7 @@ Detailed design documentation is in `docs/`:
 - `ministry-projects.json`: Project counts per ministry
 
 **Project Report Data** (`public/data/`):
-- `projects/`: 13,262 individual JSON files (one per project)
-- `project-index.json`: Index for search and list views
+- `projects/`: 12,573 individual JSON files (one per project)
+- `project-index.json`: Index for search and list views (includes yearlyBudgets for filtering)
 - Project key: MD5 hash of project name
 - Size: 52MB uncompressed, 5.1MB compressed (tar.gz)

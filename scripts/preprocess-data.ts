@@ -5,13 +5,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import type { Year } from '../types/rs-system';
+import { AVAILABLE_YEARS } from '../types/rs-system';
 import type { SankeyData } from '../types/sankey';
 import type { ProjectTimeSeriesData, ProjectIndexItem, ExpenditureTimeSeries } from '../types/report';
 
 const DATA_BASE_PATH = path.join(process.cwd(), 'data', 'rs_system');
 const OUTPUT_BASE_PATH = path.join(process.cwd(), 'public', 'data');
 
-const AVAILABLE_YEARS: Year[] = [2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+// 前処理は全年度（2014-2024）のデータを生成
+const YEARS_TO_PROCESS: Year[] = AVAILABLE_YEARS;
 
 /**
  * CSVファイルを読み込んでパース
@@ -697,6 +699,12 @@ async function generateProjectTimeSeriesData() {
       const totalBudget = years.reduce((sum, year) =>
         sum + (p.yearlyData[year]?.budget || 0), 0);
 
+      // 年度別予算を抽出（フィルタリング用）
+      const yearlyBudgets: Record<number, number> = {};
+      years.forEach(year => {
+        yearlyBudgets[year] = p.yearlyData[year]?.budget || 0;
+      });
+
       return {
         projectKey: p.projectKey,
         projectName: p.projectName,
@@ -707,6 +715,7 @@ async function generateProjectTimeSeriesData() {
         dataEndYear: years[years.length - 1] as Year,
         totalBudget,
         averageBudget: totalBudget / years.length,
+        yearlyBudgets,
       };
     })
     .sort((a, b) => b.totalBudget - a.totalBudget);
@@ -742,7 +751,7 @@ async function generateProjectTimeSeriesData() {
 async function main() {
   console.log('Starting data preprocessing...\n');
 
-  for (const year of AVAILABLE_YEARS) {
+  for (const year of YEARS_TO_PROCESS) {
     const exists = await checkYearDirectoryExists(year);
     if (exists) {
       await processYearData(year);
