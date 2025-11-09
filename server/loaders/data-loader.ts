@@ -2,7 +2,7 @@ import 'server-only';
 import type { Year } from '@/types/rs-system';
 import type { SankeyData } from '@/types/sankey';
 import { getAllDataForYear } from '../repositories/csv-repository';
-import { transformToSankeyData, getMinistryList } from '../lib/sankey-transformer';
+import { transformToSankeyData, transformToThreeColumnSankeyData, getMinistryList } from '../lib/sankey-transformer';
 
 /**
  * 指定年度のサンキー図データを取得
@@ -30,6 +30,24 @@ export async function loadSankeyDataForYear(
 export async function loadMinistryListForYear(year: Year): Promise<string[]> {
   const data = await getAllDataForYear(year);
   return getMinistryList(data.budgetSummary);
+}
+
+/**
+ * 指定年度の3列構成サンキー図データを取得
+ */
+export async function loadThreeColumnSankeyDataForYear(
+  year: Year,
+  options?: {
+    ministryFilter?: string;
+    topProjectsPerMinistry?: number;
+  }
+): Promise<SankeyData> {
+  const data = await getAllDataForYear(year);
+
+  return transformToThreeColumnSankeyData(
+    data.budgetSummary,
+    options
+  );
 }
 
 /**

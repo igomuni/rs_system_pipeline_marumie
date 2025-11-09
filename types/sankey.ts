@@ -10,17 +10,25 @@ export interface SankeyNode {
   id: string;
   name: string;
   type: NodeType;
+  column?: number; // ノードの列位置（0始まり）
   metadata?: {
     eventId?: number;
     eventName?: string;
     projectId?: number;
+    projectName?: string;
     budget?: number;
     execution?: number;
     executionRate?: number;
     ministry?: string;
+    ministries?: string[]; // その他府省庁に含まれる府省庁リスト
     location?: string;
     corporateNumber?: string;
     amount?: number;
+    projectCount?: number;
+    expenditureName?: string; // 支出先名
+    expenditureList?: Array<{ name: string; amount: number }>; // 残り支出先の全リスト（モーダル表示用）
+    ministryList?: Array<{ name: string; budget: number }>; // 小規模府省庁の全リスト（モーダル表示用）
+    projectList?: Array<{ name: string; budget: number; ministry?: string; eventId?: number }>; // 残り事業の全リスト（モーダル表示用）
   };
 }
 

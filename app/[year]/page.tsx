@@ -9,7 +9,7 @@ import {
   loadPreprocessedStatistics,
   loadPreprocessedMinistryProjects,
 } from '@/server/loaders/json-data-loader';
-import SankeyChart from '@/client/components/SankeyChart';
+import SankeyChartWithSettings from '@/client/components/SankeyChartWithSettings';
 import YearSelector from '@/client/components/YearSelector';
 import type { SankeyNode, SankeyLink } from '@/types/sankey';
 
@@ -166,7 +166,7 @@ export default async function YearPage({ params, searchParams }: Props) {
               </>
             )}
           </nav>
-          <SankeyChart data={displaySankeyData} year={year} />
+          <SankeyChartWithSettings data={displaySankeyData} year={year} />
         </div>
       </div>
 

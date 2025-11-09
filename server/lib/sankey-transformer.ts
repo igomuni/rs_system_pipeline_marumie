@@ -204,3 +204,136 @@ export function getBudgetInfoById(
 ): BudgetSummary | undefined {
   return budgetSummary.find(budget => budget.予算事業ID === eventId);
 }
+
+/**
+ * 3列構成のサンキー図データを生成
+ * 列1: 予算額合計（単一ノード）
+ * 列2: 府省庁別
+ * 列3: 事業別（各府省庁のTop3 + その他）
+ */
+export function transformToThreeColumnSankeyData(
+  budgetSummary: BudgetSummary[],
+  options?: {
+    ministryFilter?: string;
+    topProjectsPerMinistry?: number;
+  }
+): SankeyData {
+  const nodes: SankeyNode[] = [];
+  const links: SankeyLink[] = [];
+  const topN = options?.topProjectsPerMinistry || 3;
+
+  // 府省庁でフィルタリング
+  let filteredBudget = budgetSummary;
+  if (options?.ministryFilter) {
+    filteredBudget = budgetSummary.filter(
+      budget => budget.府省庁 === options.ministryFilter
+    );
+  }
+
+  // 第1列: 予算額合計ノード
+  const totalBudget = filteredBudget.reduce((sum, b) => sum + (b['当初予算(合計)'] || 0), 0);
+  const totalNode: SankeyNode = {
+    id: 'total',
+    name: '予算額合計',
+    type: 'total',
+    metadata: {
+      budget: totalBudget,
+    },
+  };
+  nodes.push(totalNode);
+
+  // 第2列: 府省庁別にグループ化
+  const ministryMap = new Map<string, { budget: number; projects: BudgetSummary[] }>();
+  filteredBudget.forEach(budget => {
+    const ministry = budget.府省庁;
+    if (!ministry) return;
+
+    if (!ministryMap.has(ministry)) {
+      ministryMap.set(ministry, { budget: 0, projects: [] });
+    }
+    const data = ministryMap.get(ministry)!;
+    data.budget += budget['当初予算(合計)'] || 0;
+    data.projects.push(budget);
+  });
+
+  // 府省庁ノードを作成し、予算額合計からのリンクを作成
+  ministryMap.forEach((data, ministry) => {
+    const ministryNodeId = `ministry_${ministry}`;
+    nodes.push({
+      id: ministryNodeId,
+      name: ministry,
+      type: 'ministry',
+      metadata: {
+        budget: data.budget,
+        ministry,
+      },
+    });
+
+    // 予算額合計 → 府省庁 のリンク
+    links.push({
+      source: 'total',
+      target: ministryNodeId,
+      value: data.budget,
+    });
+
+    // 第3列: 各府省庁のTop N事業 + その他
+    // 事業を予算額で降順ソート
+    const sortedProjects = data.projects.sort((a, b) => (b['当初予算(合計)'] || 0) - (a['当初予算(合計)'] || 0));
+    const topProjects = sortedProjects.slice(0, topN);
+    const otherProjects = sortedProjects.slice(topN);
+
+    // Top N事業のノードとリンクを作成
+    topProjects.forEach(project => {
+      const projectNodeId = `project_${project.予算事業ID}`;
+      nodes.push({
+        id: projectNodeId,
+        name: project.事業名,
+        type: 'project',
+        metadata: {
+          eventId: project.予算事業ID,
+          eventName: project.事業名,
+          budget: project['当初予算(合計)'],
+          execution: project['執行額(合計)'],
+          executionRate: project.執行率,
+          ministry,
+        },
+      });
+
+      // 府省庁 → 事業 のリンク
+      links.push({
+        source: ministryNodeId,
+        target: projectNodeId,
+        value: project['当初予算(合計)'] || 0,
+      });
+    });
+
+    // 「その他」ノードを作成（該当する場合のみ）
+    if (otherProjects.length > 0) {
+      const othersNodeId = `others_${ministry}`;
+      const othersBudget = otherProjects.reduce((sum, p) => sum + (p['当初予算(合計)'] || 0), 0);
+
+      nodes.push({
+        id: othersNodeId,
+        name: `その他（${otherProjects.length}事業）`,
+        type: 'others',
+        metadata: {
+          budget: othersBudget,
+          ministry,
+          projectCount: otherProjects.length,
+        },
+      });
+
+      // 府省庁 → その他 のリンク
+      links.push({
+        source: ministryNodeId,
+        target: othersNodeId,
+        value: othersBudget,
+      });
+    }
+  });
+
+  return {
+    nodes,
+    links,
+  };
+}

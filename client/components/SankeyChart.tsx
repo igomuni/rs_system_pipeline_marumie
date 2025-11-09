@@ -1,15 +1,27 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import * as d3 from 'd3';
 import { sankey, sankeyLinkHorizontal, type SankeyGraph } from 'd3-sankey';
-import type { SankeyData, D3SankeyNode, D3SankeyLink } from '@/types/sankey';
+import type { SankeyData, D3SankeyNode, D3SankeyLink, SankeyNode } from '@/types/sankey';
 import type { Year } from '@/types/rs-system';
+import { useSankeyConfig } from '@/client/hooks/useSankeyConfig';
+import { filterSankeyDataByConfig } from '@/client/lib/sankeyFilter';
+import { generateDrilldownData } from '@/client/lib/sankeyDrilldown';
+import ExpenditureListModal from './ExpenditureListModal';
+import MinistryListModal from './MinistryListModal';
+import ProjectListModal from './ProjectListModal';
 
 interface Props {
   data: SankeyData;
   year: Year;
+}
+
+// ドリルダウン履歴の型
+interface DrilldownHistory {
+  node: SankeyNode;
+  data: SankeyData;
 }
 
 export default function SankeyChart({ data, year }: Props) {
@@ -18,6 +30,41 @@ export default function SankeyChart({ data, year }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [selectedNode, setSelectedNode] = useState<D3SankeyNode | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const { config, isLoaded } = useSankeyConfig();
+
+  // ドリルダウン状態管理
+  const [drilldownStack, setDrilldownStack] = useState<DrilldownHistory[]>([]);
+  const [currentData, setCurrentData] = useState<SankeyData>(data);
+
+  // モーダル状態管理
+  const [expenditureModalOpen, setExpenditureModalOpen] = useState(false);
+  const [modalExpenditures, setModalExpenditures] = useState<Array<{ name: string; amount: number }>>([]);
+  const [expenditureModalTitle, setExpenditureModalTitle] = useState('');
+  const [expenditureModalProjectName, setExpenditureModalProjectName] = useState<string | undefined>();
+
+  const [ministryModalOpen, setMinistryModalOpen] = useState(false);
+  const [modalMinistries, setModalMinistries] = useState<Array<{ name: string; budget: number }>>([]);
+  const [ministryModalTitle, setMinistryModalTitle] = useState('');
+
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [modalProjects, setModalProjects] = useState<Array<{ name: string; budget: number; ministry?: string; eventId?: number }>>([]);
+  const [projectModalTitle, setProjectModalTitle] = useState('');
+
+  // 設定に基づいてデータをフィルタリング
+  // ドリルダウン中はフィルタリングしない（既に必要なノードだけで構成されているため）
+  const filteredData = useMemo(() => {
+    if (!isLoaded) return currentData;
+    // ドリルダウン中かどうかを判定
+    const isDrilldown = drilldownStack.length > 0;
+    if (isDrilldown) return currentData;
+    return filterSankeyDataByConfig(currentData, config);
+  }, [currentData, config, isLoaded, drilldownStack]);
+
+  // dataが変更されたらドリルダウンをリセット
+  useEffect(() => {
+    setDrilldownStack([]);
+    setCurrentData(data);
+  }, [data]);
 
   // ダークモードの検出
   useEffect(() => {
@@ -46,7 +93,7 @@ export default function SankeyChart({ data, year }: Props) {
   };
 
   useEffect(() => {
-    if (!svgRef.current || !containerRef.current || !data || !data.nodes || !data.nodes.length || !data.links || !data.links.length) {
+    if (!svgRef.current || !containerRef.current || !filteredData || !filteredData.nodes || !filteredData.nodes.length || !filteredData.links || !filteredData.links.length) {
       return;
     }
 
@@ -72,18 +119,40 @@ export default function SankeyChart({ data, year }: Props) {
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // カスタムnodeAlign関数：左側のノード（total）は上揃え、右側は均等配置
-    const customNodeAlign = (node: D3SankeyNode, n: number) => {
-      // nodeがundefinedまたはtypeプロパティがない場合はデフォルト値を返す
-      if (!node || !node.type) {
-        // sankeyJustifyの実装と同じロジック
-        return node.sourceLinks && node.sourceLinks.length ? node.depth || 0 : n - 1;
+    // カスタムnodeSort関数：ノードを予算額で降順にソート
+    const customNodeSort = (a: D3SankeyNode, b: D3SankeyNode) => {
+      // 「その他」ノードは常に最下部
+      // - type='others': その他府省庁、その他事業、その他支出先（集約）
+      // - IDに'others': 上記と同じ
+      // - 支出先で名前が「その他」のみ: 実データの支出先「その他」
+      const aIsOthers = a.type === 'others' || a.id.includes('others') ||
+                        (a.type === 'expenditure' && a.name === 'その他');
+      const bIsOthers = b.type === 'others' || b.id.includes('others') ||
+                        (b.type === 'expenditure' && b.name === 'その他');
+      if (aIsOthers && !bIsOthers) return 1;
+      if (!aIsOthers && bIsOthers) return -1;
+
+      // 両方が「その他」の場合は金額で降順（予算またはamount）
+      if (aIsOthers && bIsOthers) {
+        const aValue = a.metadata?.budget || a.metadata?.amount || a.value || 0;
+        const bValue = b.metadata?.budget || b.metadata?.amount || b.value || 0;
+        return bValue - aValue;
       }
-      if (node.type === 'total') {
-        return 0; // 左側のノードは上に配置
+
+      // 支出先ノードは金額（amount）で降順
+      if (a.type === 'expenditure' && b.type === 'expenditure') {
+        return (b.metadata?.amount || 0) - (a.metadata?.amount || 0);
       }
-      // sankeyJustifyの実装と同じロジック
-      return node.sourceLinks && node.sourceLinks.length ? node.depth || 0 : n - 1;
+      // 府省庁ノードは予算額で降順
+      if (a.type === 'ministry' && b.type === 'ministry') {
+        return (b.metadata?.budget || 0) - (a.metadata?.budget || 0);
+      }
+      // プロジェクトノードも予算額で降順
+      if (a.type === 'project' && b.type === 'project') {
+        return (b.metadata?.budget || 0) - (a.metadata?.budget || 0);
+      }
+      // その他は値（フローの太さ）で降順
+      return (b.value || 0) - (a.value || 0);
     };
 
     // サンキーレイアウトを作成
@@ -91,7 +160,7 @@ export default function SankeyChart({ data, year }: Props) {
       .nodeId((d) => d.id)
       .nodeWidth(15)
       .nodePadding(10)
-      .nodeAlign(customNodeAlign)
+      .nodeSort(customNodeSort)
       .extent([
         [0, 0],
         [width - margin.left - margin.right, height - margin.top - margin.bottom],
@@ -99,14 +168,53 @@ export default function SankeyChart({ data, year }: Props) {
 
     // データを変換
     const graph: SankeyGraph<D3SankeyNode, D3SankeyLink> = {
-      nodes: data.nodes.map((d) => ({ ...d })),
-      links: data.links.map((d) => ({ ...d })),
+      nodes: filteredData.nodes.map((d) => ({
+        ...d,
+        // columnプロパティが指定されている場合はdepthとして設定（D3 sankeyが列位置として使用）
+        ...(d.column !== undefined && { depth: d.column }),
+      })),
+      links: filteredData.links.map((d) => ({ ...d })),
     };
 
-    sankeyGenerator(graph);
+    // データの検証
+    if (!graph.nodes || graph.nodes.length === 0) {
+      console.error('No nodes in graph');
+      return;
+    }
+    if (!graph.links || graph.links.length === 0) {
+      console.error('No links in graph');
+      return;
+    }
 
-    // カラースケール
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    // リンクのsource/targetがノードIDとして存在するか確認
+    const nodeIds = new Set(graph.nodes.map(n => n.id));
+    const invalidLinks = graph.links.filter(l => {
+      const sourceId = typeof l.source === 'string' ? l.source : (l.source as D3SankeyNode).id;
+      const targetId = typeof l.target === 'string' ? l.target : (l.target as D3SankeyNode).id;
+      return !nodeIds.has(sourceId) || !nodeIds.has(targetId);
+    });
+
+    if (invalidLinks.length > 0) {
+      console.error('Invalid links found:', invalidLinks);
+      return;
+    }
+
+    try {
+      sankeyGenerator(graph);
+    } catch (error) {
+      console.error('Sankey generator error:', error);
+      return;
+    }
+
+    // カラースケール: 設定に基づいた固定の色マッピング
+    const colorScale = (ministry: string) => {
+      // 設定に定義された府省庁の色を使用
+      if (config.ministryColorMapping[ministry]) {
+        return config.ministryColorMapping[ministry];
+      }
+      // 定義されていない府省庁はグレー
+      return isDarkMode ? '#9ca3af' : '#d1d5db';
+    };
 
     // リンクを描画
     const links = g
@@ -117,8 +225,41 @@ export default function SankeyChart({ data, year }: Props) {
       .join('path')
       .attr('d', sankeyLinkHorizontal())
       .attr('stroke', (d) => {
+        // リンクの色は、府省庁メタデータに基づく
         const sourceNode = d.source as D3SankeyNode;
-        return colorScale(sourceNode.metadata?.ministry || sourceNode.name);
+        const targetNode = d.target as D3SankeyNode;
+
+        // ターゲットがその他ノードの場合は濃いグレー
+        if (targetNode.type === 'others') {
+          return isDarkMode ? '#4b5563' : '#6b7280';
+        }
+        // ソースがその他ノードの場合は濃いグレー
+        if (sourceNode.type === 'others') {
+          return isDarkMode ? '#4b5563' : '#6b7280';
+        }
+        // ターゲットが支出先「その他」の場合は濃いグレー
+        if (targetNode.type === 'expenditure' && targetNode.name === 'その他') {
+          return isDarkMode ? '#4b5563' : '#6b7280';
+        }
+        // ソースが支出先「その他」の場合は濃いグレー
+        if (sourceNode.type === 'expenditure' && sourceNode.name === 'その他') {
+          return isDarkMode ? '#4b5563' : '#6b7280';
+        }
+
+        // プロジェクト・支出先ノード → 府省庁の色を使用
+        if ((targetNode.type === 'project' || targetNode.type === 'expenditure') && targetNode.metadata?.ministry) {
+          return colorScale(targetNode.metadata.ministry);
+        }
+        // 府省庁ノード → 府省庁の色を使用
+        if (sourceNode.type === 'ministry' && sourceNode.metadata?.ministry) {
+          return colorScale(sourceNode.metadata.ministry);
+        }
+        // totalノード（ドリルダウン時の府省庁総予算・事業予算）→ 府省庁の色を使用
+        if ((sourceNode.type === 'total' || targetNode.type === 'total') && sourceNode.metadata?.ministry) {
+          return colorScale(sourceNode.metadata.ministry);
+        }
+        // デフォルト
+        return isDarkMode ? '#6b7280' : '#9ca3af';
       })
       .attr('stroke-width', (d) => Math.max(1, d.width || 0))
       .attr('fill', 'none')
@@ -148,7 +289,34 @@ export default function SankeyChart({ data, year }: Props) {
       .attr('y', (d) => d.y0 || 0)
       .attr('height', (d) => Math.max(0, (d.y1 || 0) - (d.y0 || 0)))
       .attr('width', (d) => Math.max(0, (d.x1 || 0) - (d.x0 || 0)))
-      .attr('fill', (d) => colorScale(d.metadata?.ministry || d.name))
+      .attr('fill', (d) => {
+        // その他ノードは常に濃いグレー
+        if (d.type === 'others') {
+          return isDarkMode ? '#4b5563' : '#6b7280';
+        }
+        // 支出先で名前が「その他」のノードも濃いグレー
+        if (d.type === 'expenditure' && d.name === 'その他') {
+          return isDarkMode ? '#4b5563' : '#6b7280';
+        }
+        // 府省庁ノード
+        if (d.type === 'ministry' && d.metadata?.ministry) {
+          return colorScale(d.metadata.ministry);
+        }
+        // プロジェクト・支出先ノード → 府省庁の色を使用
+        if ((d.type === 'project' || d.type === 'expenditure') && d.metadata?.ministry) {
+          return colorScale(d.metadata.ministry);
+        }
+        // totalノード（ドリルダウン時の府省庁総予算・事業予算）→ 府省庁の色を使用
+        if (d.type === 'total' && d.metadata?.ministry) {
+          return colorScale(d.metadata.ministry);
+        }
+        // その他のtotalノード（メインビューの総予算）: 中間的な色
+        if (d.type === 'total') {
+          return isDarkMode ? '#4b5563' : '#d1d5db';
+        }
+        // デフォルト: グレー
+        return isDarkMode ? '#6b7280' : '#9ca3af';
+      })
       .attr('stroke', '#000')
       .attr('stroke-width', 0.5)
       .on('mouseover', function (event, d) {
@@ -157,38 +325,118 @@ export default function SankeyChart({ data, year }: Props) {
       .on('mouseout', function (event, d) {
         d3.select(this).attr('opacity', 1);
       })
-      .on('click', function (event, d) {
-        // 左右の位置で階層ナビゲーションを決定
-        const isLeft = (d.x0 || 0) < width / 2;
+      .on('click', async function (event, d) {
+        event.stopPropagation();
 
-        if (isLeft) {
-          // 左側のノード → 親階層へ戻る
-          if (d.type === 'project' && d.metadata?.ministry) {
-            // 事業ノード → 府省庁ページへ
-            router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
-          } else if (d.type === 'ministry') {
-            // 府省庁ノード → 年度トップページへ
-            router.push(`/${year}`);
-          } else if (d.type === 'total') {
-            // 年度予算ノード → ホームページへ
-            router.push('/');
-          } else {
-            // その他の左側ノード → 選択状態を表示
-            setSelectedNode(d);
+        // 「小規模府省庁」ノードの場合、モーダル表示
+        if (d.type === 'others' && d.id === 'ministry_others' && d.metadata?.ministryList) {
+          setMinistryModalTitle(d.name || '小規模府省庁');
+          setModalMinistries(d.metadata.ministryList);
+          setMinistryModalOpen(true);
+          return;
+        }
+
+        // 「残り事業」ノードの場合、モーダル表示
+        if (d.type === 'others' && d.id === 'others' && d.metadata?.projectList) {
+          setProjectModalTitle(d.name || '残り事業');
+          setModalProjects(d.metadata.projectList);
+          setProjectModalOpen(true);
+          return;
+        }
+
+        // 「残り支出先」ノードの場合、モーダル表示
+        if (d.type === 'others' && d.id.includes('exp_others') && d.metadata?.expenditureList) {
+          setExpenditureModalTitle(d.name || '残り支出先');
+          setModalExpenditures(d.metadata.expenditureList);
+          setExpenditureModalProjectName(undefined); // 複数事業の集約なのでprojectNameなし
+          setExpenditureModalOpen(true);
+          return;
+        }
+
+        // 事業ノードの場合
+        if (d.type === 'project') {
+          const projectId = d.metadata?.eventId;
+          const projectName = d.name;
+
+          // メインビュー（ドリルダウン前）の場合は支出先モーダルを表示
+          if (drilldownStack.length === 0 && projectId) {
+            try {
+              // 支出先データをロード
+              const { loadExpenditureData } = await import('@/client/lib/expenditureLoader');
+              const expenditureData = await loadExpenditureData(year);
+              const projectExpData = expenditureData[String(projectId)];
+
+              if (projectExpData && projectExpData.top20Expenditures.length > 0) {
+                setExpenditureModalTitle(`${projectName} - 支出先一覧`);
+                setModalExpenditures(projectExpData.top20Expenditures);
+                setExpenditureModalProjectName(projectName);
+                setExpenditureModalOpen(true);
+                return;
+              }
+            } catch (error) {
+              console.error('Failed to load expenditure data:', error);
+            }
           }
-        } else {
-          // 右側のノード → 子階層へ進む
-          if (d.type === 'ministry' && d.metadata?.ministry) {
-            // 府省庁ノード → 府省庁詳細ページへ
-            router.push(`/${year}?ministry=${encodeURIComponent(d.metadata.ministry)}`);
-          } else if (d.type === 'project' && d.metadata?.projectId) {
-            // 事業ノード → 事業詳細ページへ
-            router.push(`/${year}/project/${d.metadata.projectId}`);
-          } else {
-            // その他の右側ノード（支出先など） → 選択状態を表示
+
+          // ドリルダウン中の場合は従来通りドリルダウン
+          try {
+            const drilldownData = await generateDrilldownData({
+              originalData: data,
+              clickedNode: d as SankeyNode,
+              year,
+              topN: config.topProjectsCount,
+            });
+
+            if (drilldownData) {
+              // ドリルダウン履歴に追加
+              setDrilldownStack((prev) => [
+                ...prev,
+                {
+                  node: d as SankeyNode,
+                  data: currentData,
+                },
+              ]);
+              setCurrentData(drilldownData);
+              return;
+            }
+          } catch (error) {
+            console.error('Failed to generate drilldown data:', error);
             setSelectedNode(d);
+            return;
           }
         }
+
+        // 府省庁ノードの場合はドリルダウン
+        if (d.type === 'ministry') {
+          try {
+            const drilldownData = await generateDrilldownData({
+              originalData: data,
+              clickedNode: d as SankeyNode,
+              year,
+              topN: config.topProjectsCount,
+            });
+
+            if (drilldownData) {
+              // ドリルダウン履歴に追加
+              setDrilldownStack((prev) => [
+                ...prev,
+                {
+                  node: d as SankeyNode,
+                  data: currentData,
+                },
+              ]);
+              setCurrentData(drilldownData);
+              return;
+            }
+          } catch (error) {
+            console.error('Failed to generate drilldown data:', error);
+            setSelectedNode(d);
+            return;
+          }
+        }
+
+        // その他の場合は選択状態を表示
+        setSelectedNode(d);
       })
       .style('cursor', (d) => {
         // クリック可能なノードはポインターカーソルを表示
@@ -254,10 +502,47 @@ export default function SankeyChart({ data, year }: Props) {
           .style('pointer-events', 'none');
       }
     });
-  }, [data, year, isDarkMode, router]);
+  }, [filteredData, year, isDarkMode, router, config, isLoaded, data, currentData, drilldownStack]);
+
+  // 戻るボタンのハンドラー
+  const handleBack = () => {
+    if (drilldownStack.length > 0) {
+      const previous = drilldownStack[drilldownStack.length - 1];
+      setCurrentData(previous.data);
+      setDrilldownStack((prev) => prev.slice(0, -1));
+    }
+  };
 
   return (
     <div className="space-y-4">
+      {/* ドリルダウン中の場合、戻るボタンを表示 */}
+      {drilldownStack.length > 0 && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleBack}
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            戻る
+          </button>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {drilldownStack[drilldownStack.length - 1].node.name}
+          </span>
+        </div>
+      )}
+
       <div ref={containerRef} className="w-full">
         <svg ref={svgRef} className="w-full" />
       </div>
@@ -300,12 +585,37 @@ export default function SankeyChart({ data, year }: Props) {
         </div>
       )}
 
-      {(!data || !data.nodes || data.nodes.length === 0 || !data.links || data.links.length === 0) && (
+      {(!filteredData || !filteredData.nodes || filteredData.nodes.length === 0 || !filteredData.links || filteredData.links.length === 0) && (
         <div className="text-center py-12 text-gray-500">
           <p>表示するデータがありません</p>
           <p className="text-sm mt-2">別の年度または府省庁を選択してください</p>
         </div>
       )}
+
+      {/* 支出先リストモーダル */}
+      <ExpenditureListModal
+        isOpen={expenditureModalOpen}
+        onClose={() => setExpenditureModalOpen(false)}
+        expenditures={modalExpenditures}
+        title={expenditureModalTitle}
+        projectName={expenditureModalProjectName}
+      />
+
+      {/* 府省庁リストモーダル */}
+      <MinistryListModal
+        isOpen={ministryModalOpen}
+        onClose={() => setMinistryModalOpen(false)}
+        ministries={modalMinistries}
+        title={ministryModalTitle}
+      />
+
+      {/* 事業リストモーダル */}
+      <ProjectListModal
+        isOpen={projectModalOpen}
+        onClose={() => setProjectModalOpen(false)}
+        projects={modalProjects}
+        title={projectModalTitle}
+      />
     </div>
   );
 }
