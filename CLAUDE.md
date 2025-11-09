@@ -8,9 +8,14 @@ This is a Next.js web application that visualizes Japanese government budget dat
 
 ### Key Features
 - **Sankey Diagram Visualization**: Intuitive flow visualization from ministries to expenditure destinations
+  - **Interactive Modals**: Click on aggregated nodes to view full lists
+    - "小規模府省庁（N）": Click to show all minor ministries (searchable/sortable)
+    - "残りN事業": Click to show all projects (with links to project reports)
+    - "事業ノード": Click to show expenditure list (with link to project report)
+    - "残りN支出先": Click to show all expenditures (searchable/sortable)
+  - **Drilldown Navigation**: Click ministries to see projects (sorted by total expenditure), then expenditures
+  - **Configurable Display**: Adjust Top N display (5-50), 20 ministry colors, dark mode support
 - **Year Selection**: Browse data from 2014-2024
-- **Ministry Filtering**: Filter by specific ministry
-- **Interactive UI**: Hover for details on nodes and links
 - **Statistics Dashboard**: Budget totals, execution amounts, and execution rates
 - **Project Reports**: 12,573 projects with search, filtering, and time-series analysis
   - Fuzzy search using Fuse.js
@@ -88,10 +93,22 @@ client/                 # Client-side components ("use client")
   │   │   ├── ProjectSearchInterface.tsx    # Search UI with Fuse.js
   │   │   ├── ProjectTable.tsx              # Project list table (with sorting)
   │   │   └── ProjectDetailView.tsx         # Project detail view (with year filter)
-  │   ├── SankeyChart.tsx    # D3.js Sankey visualization
-  │   └── YearSelector.tsx   # Year selection UI
+  │   ├── ExpenditureListModal.tsx  # Expenditure list modal (searchable/sortable)
+  │   ├── MinistryListModal.tsx     # Ministry list modal (searchable/sortable)
+  │   ├── ProjectListModal.tsx      # Project list modal (with report links)
+  │   ├── SankeyChart.tsx           # D3.js Sankey visualization with interactivity
+  │   ├── SankeyChartWithSettings.tsx # Sankey chart with config panel
+  │   ├── SankeyConfigPanel.tsx     # Configuration panel for Sankey settings
+  │   └── YearSelector.tsx          # Year selection UI
+  ├── hooks/
+  │   └── useSankeyConfig.ts        # Hook for Sankey config (localStorage persistence)
   └── lib/
-      └── formatBudget.ts # Budget formatting utilities (trillion/billion/10k yen)
+      ├── expenditureLoader.ts      # Load expenditure data dynamically
+      ├── formatBudget.ts           # Budget formatting utilities (trillion/billion/10k yen)
+      ├── projectIndex.ts           # Project index utilities (name → projectKey)
+      ├── projectKey.ts             # MD5 hash generation for project keys
+      ├── sankeyDrilldown.ts        # Drilldown data generation logic
+      └── sankeyFilter.ts           # Filtering logic based on config
 
 server/                 # Server-side logic (import "server-only")
   ├── loaders/          # Data loading entry points
@@ -107,6 +124,7 @@ server/                 # Server-side logic (import "server-only")
 types/                  # TypeScript type definitions
   ├── rs-system.ts      # Government budget data types
   ├── sankey.ts         # Sankey diagram types
+  ├── sankey-config.ts  # Sankey configuration types
   └── report.ts         # Project report types
 
 scripts/                # Build-time scripts
