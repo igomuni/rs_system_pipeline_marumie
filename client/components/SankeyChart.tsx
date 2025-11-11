@@ -9,6 +9,7 @@ import type { Year } from '@/types/rs-system';
 import { useSankeyConfig } from '@/client/hooks/useSankeyConfig';
 import { filterSankeyDataByConfig } from '@/client/lib/sankeyFilter';
 import { generateDrilldownData } from '@/client/lib/sankeyDrilldown';
+import { formatBudget } from '@/client/lib/formatBudget';
 import ExpenditureListModal from './ExpenditureListModal';
 import MinistryListModal from './MinistryListModal';
 import ProjectListModal from './ProjectListModal';
@@ -75,22 +76,6 @@ export default function SankeyChart({ data, year }: Props) {
     darkModeMediaQuery.addEventListener('change', handler);
     return () => darkModeMediaQuery.removeEventListener('change', handler);
   }, []);
-
-  // 金額を適切な単位でフォーマット
-  const formatAmount = (amount: number): string => {
-    if (amount >= 1000000000000) {
-      // 1兆円以上
-      return `${(amount / 1000000000000).toFixed(1)}兆円`;
-    } else if (amount >= 100000000) {
-      // 1億円以上
-      return `${(amount / 100000000).toFixed(0)}億円`;
-    } else if (amount >= 10000) {
-      // 1万円以上
-      return `${(amount / 10000).toFixed(0)}万円`;
-    } else {
-      return `${amount.toFixed(0)}円`;
-    }
-  };
 
   useEffect(() => {
     if (!svgRef.current || !containerRef.current || !filteredData || !filteredData.nodes || !filteredData.nodes.length || !filteredData.links || !filteredData.links.length) {
@@ -212,9 +197,12 @@ export default function SankeyChart({ data, year }: Props) {
       if (config.ministryColorMapping[ministry]) {
         return config.ministryColorMapping[ministry];
       }
-      // 定義されていない府省庁はグレー
-      return isDarkMode ? '#9ca3af' : '#d1d5db';
+      // 定義されていない府省庁はothersColorを使用
+      return config.othersColor || (isDarkMode ? '#9ca3af' : '#d1d5db');
     };
+
+    // その他ノードの色
+    const othersColor = config.othersColor || (isDarkMode ? '#4b5563' : '#6b7280');
 
     // リンクを描画
     const links = g
@@ -229,21 +217,21 @@ export default function SankeyChart({ data, year }: Props) {
         const sourceNode = d.source as D3SankeyNode;
         const targetNode = d.target as D3SankeyNode;
 
-        // ターゲットがその他ノードの場合は濃いグレー
+        // ターゲットがその他ノードの場合
         if (targetNode.type === 'others') {
-          return isDarkMode ? '#4b5563' : '#6b7280';
+          return othersColor;
         }
-        // ソースがその他ノードの場合は濃いグレー
+        // ソースがその他ノードの場合
         if (sourceNode.type === 'others') {
-          return isDarkMode ? '#4b5563' : '#6b7280';
+          return othersColor;
         }
-        // ターゲットが支出先「その他」の場合は濃いグレー
+        // ターゲットが支出先「その他」の場合
         if (targetNode.type === 'expenditure' && targetNode.name === 'その他') {
-          return isDarkMode ? '#4b5563' : '#6b7280';
+          return othersColor;
         }
-        // ソースが支出先「その他」の場合は濃いグレー
+        // ソースが支出先「その他」の場合
         if (sourceNode.type === 'expenditure' && sourceNode.name === 'その他') {
-          return isDarkMode ? '#4b5563' : '#6b7280';
+          return othersColor;
         }
 
         // プロジェクト・支出先ノード → 府省庁の色を使用
@@ -275,7 +263,7 @@ export default function SankeyChart({ data, year }: Props) {
     links.append('title').text((d) => {
       const sourceNode = d.source as D3SankeyNode;
       const targetNode = d.target as D3SankeyNode;
-      return `${sourceNode.name} → ${targetNode.name}\n金額: ${(d.value / 100000000).toFixed(2)}億円`;
+      return `${sourceNode.name} → ${targetNode.name}\n金額: ${formatBudget(d.value)}`;
     });
 
     // ノードを描画
@@ -290,13 +278,13 @@ export default function SankeyChart({ data, year }: Props) {
       .attr('height', (d) => Math.max(0, (d.y1 || 0) - (d.y0 || 0)))
       .attr('width', (d) => Math.max(0, (d.x1 || 0) - (d.x0 || 0)))
       .attr('fill', (d) => {
-        // その他ノードは常に濃いグレー
+        // その他ノードは設定された色を使用
         if (d.type === 'others') {
-          return isDarkMode ? '#4b5563' : '#6b7280';
+          return othersColor;
         }
-        // 支出先で名前が「その他」のノードも濃いグレー
+        // 支出先で名前が「その他」のノードも設定された色を使用
         if (d.type === 'expenditure' && d.name === 'その他') {
-          return isDarkMode ? '#4b5563' : '#6b7280';
+          return othersColor;
         }
         // 府省庁ノード
         if (d.type === 'ministry' && d.metadata?.ministry) {
@@ -458,10 +446,10 @@ export default function SankeyChart({ data, year }: Props) {
         lines.push(`事業: ${d.metadata.eventName}`);
       }
       if (d.metadata?.budget) {
-        lines.push(`予算: ${(d.metadata.budget / 100000000).toFixed(2)}億円`);
+        lines.push(`予算: ${formatBudget(d.metadata.budget)}`);
       }
       if (d.value) {
-        lines.push(`合計: ${(d.value / 100000000).toFixed(2)}億円`);
+        lines.push(`合計: ${formatBudget(d.value)}`);
       }
       return lines.join('\n');
     });
@@ -496,7 +484,7 @@ export default function SankeyChart({ data, year }: Props) {
           .attr('x', x)
           .attr('y', y + 6)
           .attr('text-anchor', textAnchor)
-          .text(formatAmount(d.value))
+          .text(formatBudget(d.value))
           .attr('font-size', amountFontSize)
           .attr('fill', isDarkMode ? '#9ca3af' : '#666')
           .style('pointer-events', 'none');
@@ -567,7 +555,7 @@ export default function SankeyChart({ data, year }: Props) {
             {selectedNode.value && (
               <p>
                 <span className="font-medium">金額:</span>{' '}
-                {(selectedNode.value / 100000000).toFixed(2)}億円
+                {formatBudget(selectedNode.value)}
               </p>
             )}
             {selectedNode.metadata?.location && (

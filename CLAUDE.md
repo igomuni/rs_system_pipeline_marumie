@@ -14,7 +14,12 @@ This is a Next.js web application that visualizes Japanese government budget dat
     - "事業ノード": Click to show expenditure list (with link to project report)
     - "残りN支出先": Click to show all expenditures (searchable/sortable)
   - **Drilldown Navigation**: Click ministries to see projects (sorted by total expenditure), then expenditures
-  - **Configurable Display**: Adjust Top N display (5-50), 20 ministry colors, dark mode support
+  - **Configurable Display**:
+    - Adjust Top N display (5-50)
+    - All 40 ministries color customization (data grid view with budget amounts and sorting)
+    - Quick color generation tools (HUE distribution, pastel palette, random colors)
+    - Dark mode support
+    - Settings button aligned with breadcrumbs
 - **Year Selection**: Browse data from 2014-2024
 - **Statistics Dashboard**: Budget totals, execution amounts, and execution rates
 - **Project Reports**: 12,573 projects with search, filtering, and time-series analysis

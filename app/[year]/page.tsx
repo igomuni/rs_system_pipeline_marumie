@@ -150,23 +150,27 @@ export default async function YearPage({ params, searchParams }: Props) {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          {/* Breadcrumbs */}
-          <nav className="mb-4 flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
-              ホーム
-            </Link>
-            <span>/</span>
-            <Link href={`/${year}`} className="hover:text-blue-600 dark:hover:text-blue-400">
-              {year}年度
-            </Link>
-            {resolvedSearchParams.ministry && (
-              <>
+          <SankeyChartWithSettings
+            data={displaySankeyData}
+            year={year}
+            breadcrumbsSlot={
+              <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
+                  ホーム
+                </Link>
                 <span>/</span>
-                <span className="text-gray-900 dark:text-white">{resolvedSearchParams.ministry}</span>
-              </>
-            )}
-          </nav>
-          <SankeyChartWithSettings data={displaySankeyData} year={year} />
+                <Link href={`/${year}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+                  {year}年度
+                </Link>
+                {resolvedSearchParams.ministry && (
+                  <>
+                    <span>/</span>
+                    <span className="text-gray-900 dark:text-white">{resolvedSearchParams.ministry}</span>
+                  </>
+                )}
+              </nav>
+            }
+          />
         </div>
       </div>
 

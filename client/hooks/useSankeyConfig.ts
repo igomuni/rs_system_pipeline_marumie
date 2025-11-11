@@ -16,8 +16,29 @@ export function useSankeyConfig() {
     try {
       const stored = localStorage.getItem(SANKEY_CONFIG_STORAGE_KEY);
       if (stored) {
-        const parsed = JSON.parse(stored) as SankeyConfig;
-        setConfig(parsed);
+        const parsed = JSON.parse(stored) as any;
+        // マイグレーション: coloredMinistriesCountが存在する場合は削除
+        if ('coloredMinistriesCount' in parsed) {
+          delete parsed.coloredMinistriesCount;
+        }
+        // othersColorが存在しない場合はデフォルト値を設定
+        if (!parsed.othersColor) {
+          parsed.othersColor = DEFAULT_SANKEY_CONFIG.othersColor;
+        }
+        // ministryColorMappingをデフォルトとマージ（新しい府省庁を追加）
+        if (parsed.ministryColorMapping) {
+          const defaultMinistries = Object.keys(DEFAULT_SANKEY_CONFIG.ministryColorMapping);
+          const storedMinistries = Object.keys(parsed.ministryColorMapping);
+          // デフォルトに存在するが保存されていない府省庁を追加
+          defaultMinistries.forEach((ministry) => {
+            if (!storedMinistries.includes(ministry)) {
+              parsed.ministryColorMapping[ministry] = DEFAULT_SANKEY_CONFIG.ministryColorMapping[ministry];
+            }
+          });
+        } else {
+          parsed.ministryColorMapping = DEFAULT_SANKEY_CONFIG.ministryColorMapping;
+        }
+        setConfig(parsed as SankeyConfig);
       }
     } catch (error) {
       console.error('Failed to load sankey config from localStorage:', error);
