@@ -494,13 +494,13 @@ function generate6ColumnMainSankeyData(
     value: flowValue,
   });
 
-  // 差額ノードの処理（列2に配置）
+  // 差額ノードの処理
   const difference = Math.abs(totalBudget - totalExecution);
   const threshold = Math.max(totalBudget, totalExecution) * 0.001; // 0.1%
 
   if (difference > threshold) {
     if (totalBudget > totalExecution) {
-      // 予算超過の場合: 列2に配置
+      // 予算超過の場合: 列2（支出総計の列）に配置
       const differenceNodeId = 'difference_budget_excess';
       nodes.push({
         id: differenceNodeId,
@@ -524,13 +524,13 @@ function generate6ColumnMainSankeyData(
         value: difference,
       });
     } else {
-      // 支出超過の場合: 列3に配置
+      // 支出超過の場合: 列1（予算総計の列）に配置
       const differenceNodeId = 'difference_execution_excess';
       nodes.push({
         id: differenceNodeId,
         name: `差額（支出超過）`,
         type: 'difference',
-        column: 3,
+        column: 1,
         metadata: {
           differenceData: {
             budgetTotal: totalBudget,
@@ -541,10 +541,10 @@ function generate6ColumnMainSankeyData(
         },
       });
 
-      // 支出総計 → 差額ノード
+      // 差額ノード → 支出総計
       links.push({
-        source: executionTotalNodeId,
-        target: differenceNodeId,
+        source: differenceNodeId,
+        target: executionTotalNodeId,
         value: difference,
       });
     }
