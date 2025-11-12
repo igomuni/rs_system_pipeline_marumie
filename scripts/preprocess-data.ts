@@ -121,6 +121,9 @@ async function processYearData(year: Year) {
   const outputDir = path.join(OUTPUT_BASE_PATH, `year_${year}`);
   await fs.mkdir(outputDir, { recursive: true });
 
+  // Nivo形式のデータを生成
+  const sankeyMainDataNivo = convertToNivoFormat(sankeyMainData);
+
   await Promise.all([
     fs.writeFile(
       path.join(outputDir, 'sankey.json'),
@@ -129,6 +132,10 @@ async function processYearData(year: Year) {
     fs.writeFile(
       path.join(outputDir, 'sankey-main.json'),
       JSON.stringify(sankeyMainData, null, 2)
+    ),
+    fs.writeFile(
+      path.join(outputDir, 'sankey-main-nivo.json'),
+      JSON.stringify(sankeyMainDataNivo, null, 2)
     ),
     fs.writeFile(
       path.join(outputDir, 'statistics.json'),
@@ -614,6 +621,26 @@ function generate6ColumnMainSankeyData(
     nodes,
     links,
   };
+}
+
+/**
+ * SankeyDataをNivo形式に変換
+ */
+function convertToNivoFormat(sankeyData: SankeyData): any {
+  // Nivoのノード形式: { id: string }
+  const nodes = sankeyData.nodes.map((node) => ({
+    ...node,
+    id: node.id, // idを最後に配置して上書き
+  }));
+
+  // Nivoのリンク形式: { source: string, target: string, value: number }
+  const links = sankeyData.links.map((link) => ({
+    source: typeof link.source === 'string' ? link.source : link.source,
+    target: typeof link.target === 'string' ? link.target : link.target,
+    value: link.value,
+  }));
+
+  return { nodes, links };
 }
 
 /**

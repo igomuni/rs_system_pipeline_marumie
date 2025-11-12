@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ResponsiveSankey } from '@nivo/sankey';
 import type { SankeyData } from '@/types/sankey';
 import type { Year } from '@/types/rs-system';
@@ -14,28 +14,38 @@ interface Props {
 
 export default function SankeyChartNivo({ data, year }: Props) {
   const { config, isLoaded } = useSankeyConfig();
+  const [nivoData, setNivoData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // SankeyDataをNivo形式に変換
-  const nivoData = useMemo(() => {
-    if (!data) return { nodes: [], links: [] };
+  // Nivo形式のJSONを直接読み込む
+  useEffect(() => {
+    async function loadNivoData() {
+      try {
+        const response = await fetch(`/data/year_${year}/sankey-main-nivo.json`);
+        const jsonData = await response.json();
+        setNivoData(jsonData);
+      } catch (error) {
+        console.error('Failed to load Nivo data:', error);
+        // フォールバック: クライアント側で変換
+        const nodes = data.nodes.map((node) => ({
+          id: node.id,
+          nodeColor: getNodeColor(node, config),
+        }));
+        const links = data.links.map((link) => ({
+          source: typeof link.source === 'string' ? link.source : (link.source as any).id,
+          target: typeof link.target === 'string' ? link.target : (link.target as any).id,
+          value: link.value,
+        }));
+        setNivoData({ nodes, links });
+      } finally {
+        setLoading(false);
+      }
+    }
 
-    // Nivoのノード形式: { id: string }
-    const nodes = data.nodes.map((node) => ({
-      id: node.id,
-      nodeColor: getNodeColor(node, config),
-    }));
+    loadNivoData();
+  }, [year, data, config]);
 
-    // Nivoのリンク形式: { source: string, target: string, value: number }
-    const links = data.links.map((link) => ({
-      source: typeof link.source === 'string' ? link.source : (link.source as any).id,
-      target: typeof link.target === 'string' ? link.target : (link.target as any).id,
-      value: link.value,
-    }));
-
-    return { nodes, links };
-  }, [data, config]);
-
-  if (!isLoaded) {
+  if (!isLoaded || loading || !nivoData) {
     return <div className="flex items-center justify-center h-[600px]">読み込み中...</div>;
   }
 
