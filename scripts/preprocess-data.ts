@@ -90,11 +90,18 @@ async function processYearData(year: Year) {
   console.log(`  - Expenditure records: ${expenditureData.length}`);
   console.log(`  - Connection records: ${connectionData.length}`);
 
-  // 簡易版のサンキーデータを生成（府省庁ごとに集約）
+  // 簡易版のサンキーデータを生成（府省庁ごとに集約、レガシー）
   const sankeyData = generateSimplifiedSankeyData(
     budgetData,
     expenditureData,
     connectionData,
+    year
+  );
+
+  // 6列メインサンキー図データを生成
+  const sankeyMainData = generate6ColumnMainSankeyData(
+    budgetData,
+    expenditureData,
     year
   );
 
@@ -118,6 +125,10 @@ async function processYearData(year: Year) {
     fs.writeFile(
       path.join(outputDir, 'sankey.json'),
       JSON.stringify(sankeyData, null, 2)
+    ),
+    fs.writeFile(
+      path.join(outputDir, 'sankey-main.json'),
+      JSON.stringify(sankeyMainData, null, 2)
     ),
     fs.writeFile(
       path.join(outputDir, 'statistics.json'),
@@ -272,6 +283,298 @@ function generateSimplifiedSankeyData(
       value: project.budget,
     });
   });
+
+  return {
+    nodes,
+    links,
+  };
+}
+
+/**
+ * 6列メインサンキー図データを生成
+ * 列1: 府省庁ごとの事業Top3
+ * 列2: 府省庁別予算合計
+ * 列3: 予算総計
+ * 列4: 支出総計
+ * 列5: 府省庁別支出合計
+ * 列6: 府省庁ごとの支出先Top3
+ */
+function generate6ColumnMainSankeyData(
+  budgetData: any[],
+  expenditureData: any[],
+  year: Year
+): SankeyData {
+  const nodes: any[] = [];
+  const links: any[] = [];
+
+  // 対象年度のデータのみをフィルター
+  const currentYearBudgetData = budgetData.filter((budget) => {
+    const budgetYear = budget.予算年度;
+    return budgetYear === year;
+  });
+
+  // 府省庁ごとに集約（予算と支出）
+  const ministryData = new Map<
+    string,
+    {
+      budget: number;
+      execution: number;
+      projects: Map<number, { name: string; budget: number; execution: number }>;
+    }
+  >();
+
+  let totalBudget = 0;
+  let totalExecution = 0;
+
+  currentYearBudgetData.forEach((budget) => {
+    const ministry = budget.府省庁;
+    const projectId = budget.予算事業ID;
+    const projectName = budget.事業名;
+    if (!ministry || !projectId || !projectName) return;
+
+    const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
+    const executionAmount = normalizeAmount(budget['執行額'] || 0, year);
+
+    if (!ministryData.has(ministry)) {
+      ministryData.set(ministry, { budget: 0, execution: 0, projects: new Map() });
+    }
+    const data = ministryData.get(ministry)!;
+    data.budget += budgetAmount;
+    data.execution += executionAmount;
+    totalBudget += budgetAmount;
+    totalExecution += executionAmount;
+
+    // 事業データを集約
+    if (data.projects.has(projectId)) {
+      const project = data.projects.get(projectId)!;
+      project.budget += budgetAmount;
+      project.execution += executionAmount;
+    } else {
+      data.projects.set(projectId, {
+        name: projectName,
+        budget: budgetAmount,
+        execution: executionAmount,
+      });
+    }
+  });
+
+  // 府省庁を予算額降順でソート
+  const sortedMinistries = Array.from(ministryData.entries()).sort(
+    ([, a], [, b]) => b.budget - a.budget
+  );
+
+  // 列1: 府省庁ごとの事業Top3
+  const projectNodesMap = new Map<string, any[]>(); // ministry -> project nodes
+  sortedMinistries.forEach(([ministry, data]) => {
+    const sortedProjects = Array.from(data.projects.entries())
+      .map(([projectId, project]) => ({
+        id: projectId,
+        name: project.name,
+        budget: project.budget,
+        execution: project.execution,
+      }))
+      .sort((a, b) => b.budget - a.budget);
+
+    const top3Projects = sortedProjects.slice(0, 3);
+    const othersProjects = sortedProjects.slice(3);
+    const othersTotal = othersProjects.reduce((sum, p) => sum + p.budget, 0);
+
+    const projectNodes: any[] = [];
+
+    // Top3事業ノード
+    top3Projects.forEach((project) => {
+      const nodeId = `project_${ministry}_${project.id}`;
+      const projectNode = {
+        id: nodeId,
+        name: project.name,
+        type: 'project',
+        column: 0,
+        metadata: {
+          ministry,
+          eventId: project.id,
+          eventName: project.name,
+          budget: project.budget,
+          execution: project.execution,
+        },
+      };
+      nodes.push(projectNode);
+      projectNodes.push(projectNode);
+    });
+
+    // 残りN事業ノード
+    if (othersProjects.length > 0) {
+      const othersNode = {
+        id: `others_projects_${ministry}`,
+        name: `残り${othersProjects.length}事業`,
+        type: 'others',
+        column: 0,
+        metadata: {
+          ministry,
+          projectCount: othersProjects.length,
+          budget: othersTotal,
+          projectList: othersProjects.map((p) => ({
+            name: p.name,
+            budget: p.budget,
+            ministry,
+            eventId: p.id,
+          })),
+        },
+      };
+      nodes.push(othersNode);
+      projectNodes.push(othersNode);
+    }
+
+    projectNodesMap.set(ministry, projectNodes);
+  });
+
+  // 列2: 府省庁別予算合計ノード
+  sortedMinistries.forEach(([ministry, data]) => {
+    const ministryNodeId = `ministry_budget_${ministry}`;
+    nodes.push({
+      id: ministryNodeId,
+      name: ministry,
+      type: 'ministry',
+      column: 1,
+      metadata: {
+        ministry,
+        budget: data.budget,
+        execution: data.execution,
+      },
+    });
+
+    // 列1（事業） → 列2（府省庁）のリンク
+    const projectNodes = projectNodesMap.get(ministry) || [];
+    projectNodes.forEach((projectNode) => {
+      links.push({
+        source: projectNode.id,
+        target: ministryNodeId,
+        value: projectNode.metadata.budget,
+      });
+    });
+  });
+
+  // 列3: 予算総計ノード
+  const budgetTotalNodeId = 'total_budget';
+  nodes.push({
+    id: budgetTotalNodeId,
+    name: `予算総計`,
+    type: 'total',
+    column: 2,
+    metadata: {
+      budget: totalBudget,
+    },
+  });
+
+  // 列2（府省庁） → 列3（予算総計）のリンク
+  sortedMinistries.forEach(([ministry, data]) => {
+    const ministryNodeId = `ministry_budget_${ministry}`;
+    links.push({
+      source: ministryNodeId,
+      target: budgetTotalNodeId,
+      value: data.budget,
+    });
+  });
+
+  // 差額ノード（予算 > 支出の場合）
+  const difference = Math.abs(totalBudget - totalExecution);
+  const threshold = Math.max(totalBudget, totalExecution) * 0.001; // 0.1%
+  if (difference > threshold && totalBudget > totalExecution) {
+    const differenceNodeId = 'difference_budget_excess';
+    nodes.push({
+      id: differenceNodeId,
+      name: `差額（予算超過）`,
+      type: 'difference',
+      column: 2,
+      metadata: {
+        differenceData: {
+          budgetTotal: totalBudget,
+          executionTotal: totalExecution,
+          difference,
+          direction: 'budget-excess',
+        },
+      },
+    });
+
+    // 予算総計 → 差額ノード
+    links.push({
+      source: budgetTotalNodeId,
+      target: differenceNodeId,
+      value: difference,
+    });
+  }
+
+  // 列4: 支出総計ノード
+  const executionTotalNodeId = 'total_execution';
+  nodes.push({
+    id: executionTotalNodeId,
+    name: `支出総計`,
+    type: 'total',
+    column: 3,
+    metadata: {
+      execution: totalExecution,
+    },
+  });
+
+  // 列3（予算総計） → 列4（支出総計）のリンク
+  const flowValue = Math.min(totalBudget, totalExecution);
+  links.push({
+    source: budgetTotalNodeId,
+    target: executionTotalNodeId,
+    value: flowValue,
+  });
+
+  // 差額ノード（支出 > 予算の場合）
+  if (difference > threshold && totalExecution > totalBudget) {
+    const differenceNodeId = 'difference_execution_excess';
+    nodes.push({
+      id: differenceNodeId,
+      name: `差額（支出超過）`,
+      type: 'difference',
+      column: 3,
+      metadata: {
+        differenceData: {
+          budgetTotal: totalBudget,
+          executionTotal: totalExecution,
+          difference,
+          direction: 'execution-excess',
+        },
+      },
+    });
+
+    // 差額ノード → 支出総計
+    links.push({
+      source: differenceNodeId,
+      target: executionTotalNodeId,
+      value: difference,
+    });
+  }
+
+  // 列5: 府省庁別支出合計ノード
+  sortedMinistries.forEach(([ministry, data]) => {
+    const ministryNodeId = `ministry_execution_${ministry}`;
+    nodes.push({
+      id: ministryNodeId,
+      name: ministry,
+      type: 'ministry',
+      column: 4,
+      metadata: {
+        ministry,
+        execution: data.execution,
+        budget: data.budget,
+      },
+    });
+
+    // 列4（支出総計） → 列5（府省庁）のリンク
+    links.push({
+      source: executionTotalNodeId,
+      target: ministryNodeId,
+      value: data.execution,
+    });
+  });
+
+  // 列6: 府省庁ごとの支出先Top3（簡易版、詳細は動的生成）
+  // ここでは支出先データは含めず、クライアント側で動的生成する方針
+  // 必要に応じて後で追加可能
 
   return {
     nodes,

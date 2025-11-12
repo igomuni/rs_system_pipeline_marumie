@@ -2,9 +2,14 @@
  * サンキー図の表示設定
  */
 
+import type { TopNConfig } from './sankey';
+
 export interface SankeyConfig {
-  // Top N設定
+  // Top N設定（レガシー、後方互換性のため残す）
   topProjectsCount: number; // Top N事業の数（デフォルト: 20）
+
+  // TopN設定（6列サンキー図用）
+  topN: TopNConfig;
 
   // 府省庁の閾値設定
   ministryThreshold: number; // 府省庁予算の閾値（円単位、デフォルト: 1000億円 = 100000000000）
@@ -14,11 +19,20 @@ export interface SankeyConfig {
   // 色分け設定
   ministryColorMapping: Record<string, string>; // 府省庁名 → 色のマッピング
   othersColor: string; // TopN以外の「残りN」「その他」の色（デフォルト: グレー）
+  differenceColor: string; // 差額ノードの色（デフォルト: グレー）
 }
 
 // デフォルト設定
 export const DEFAULT_SANKEY_CONFIG: SankeyConfig = {
   topProjectsCount: 20,
+  topN: {
+    mainTopProjects: 3,
+    mainTopExpenditures: 3,
+    ministryTopProjects: 10,
+    ministryTopExpenditures: 10,
+    projectTopExpenditures: 20,
+    expenditureTopProjects: 30,
+  },
   ministryThreshold: 100000000000, // 1000億円
   ministryThresholdType: 'percentage',
   ministryThresholdPercentage: 0.01, // 1%
@@ -66,6 +80,7 @@ export const DEFAULT_SANKEY_CONFIG: SankeyConfig = {
     '中小企業庁': '#bcbd22',
   },
   othersColor: '#6b7280', // グレー
+  differenceColor: '#9ca3af', // グレー（差額ノード用）
 };
 
 // LocalStorageのキー

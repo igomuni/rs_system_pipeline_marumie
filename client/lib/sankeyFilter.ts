@@ -8,6 +8,15 @@ export function filterSankeyDataByConfig(
   originalData: SankeyData,
   config: SankeyConfig
 ): SankeyData {
+  // 6列データの検出: columnプロパティが設定されているノードが存在する場合
+  const is6ColumnData = originalData.nodes.some((n) => n.column !== undefined);
+
+  // 6列データの場合はフィルタリングをスキップ（事前処理済み）
+  if (is6ColumnData) {
+    return originalData;
+  }
+
+  // 以下は3列レガシーデータ用のフィルタリング処理
   const nodes: SankeyNode[] = [];
   const links: SankeyLink[] = [];
 

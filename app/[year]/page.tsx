@@ -5,6 +5,7 @@ import { AVAILABLE_YEARS } from '@/types/rs-system';
 import { checkYearDataExists } from '@/server/repositories/json-repository';
 import {
   loadPreprocessedSankeyData,
+  loadPreprocessedSankeyMainData,
   loadPreprocessedMinistries,
   loadPreprocessedStatistics,
   loadPreprocessedMinistryProjects,
@@ -41,15 +42,17 @@ export default async function YearPage({ params, searchParams }: Props) {
   }
 
   // 事前処理済みデータを取得（高速）
-  const [sankeyData, ministries, statistics, ministryProjects] = await Promise.all([
-    loadPreprocessedSankeyData(year),
+  const [sankeyData, sankeyMainData, ministries, statistics, ministryProjects] = await Promise.all([
+    loadPreprocessedSankeyData(year), // レガシー3列データ（ドリルダウン用に保持）
+    loadPreprocessedSankeyMainData(year), // 新6列メインデータ
     loadPreprocessedMinistries(year),
     loadPreprocessedStatistics(year),
     loadPreprocessedMinistryProjects(year),
   ]);
 
-  // 府省庁フィルターがある場合は、その府省庁の事業Top10を表示
-  let displaySankeyData = sankeyData;
+  // 府省庁フィルターがある場合は、その府省庁の事業Top10を表示（ドリルダウン）
+  // フィルターがない場合は、6列メインデータを表示
+  let displaySankeyData = resolvedSearchParams.ministry ? sankeyData : sankeyMainData;
 
   if (resolvedSearchParams.ministry && ministryProjects[resolvedSearchParams.ministry]) {
     const ministryData = ministryProjects[resolvedSearchParams.ministry];

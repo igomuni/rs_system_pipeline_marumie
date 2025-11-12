@@ -17,14 +17,27 @@ export function useSankeyConfig() {
       const stored = localStorage.getItem(SANKEY_CONFIG_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored) as any;
-        // マイグレーション: coloredMinistriesCountが存在する場合は削除
+
+        // マイグレーション: 古いフィールドを削除
         if ('coloredMinistriesCount' in parsed) {
           delete parsed.coloredMinistriesCount;
         }
-        // othersColorが存在しない場合はデフォルト値を設定
+
+        // マイグレーション: othersColorが存在しない場合はデフォルト値を設定
         if (!parsed.othersColor) {
           parsed.othersColor = DEFAULT_SANKEY_CONFIG.othersColor;
         }
+
+        // マイグレーション: differenceColorが存在しない場合はデフォルト値を設定
+        if (!parsed.differenceColor) {
+          parsed.differenceColor = DEFAULT_SANKEY_CONFIG.differenceColor;
+        }
+
+        // マイグレーション: topNが存在しない場合はデフォルト値を設定
+        if (!parsed.topN) {
+          parsed.topN = DEFAULT_SANKEY_CONFIG.topN;
+        }
+
         // ministryColorMappingをデフォルトとマージ（新しい府省庁を追加）
         if (parsed.ministryColorMapping) {
           const defaultMinistries = Object.keys(DEFAULT_SANKEY_CONFIG.ministryColorMapping);
@@ -38,6 +51,7 @@ export function useSankeyConfig() {
         } else {
           parsed.ministryColorMapping = DEFAULT_SANKEY_CONFIG.ministryColorMapping;
         }
+
         setConfig(parsed as SankeyConfig);
       }
     } catch (error) {
