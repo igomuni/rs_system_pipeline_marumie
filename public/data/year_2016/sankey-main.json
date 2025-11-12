@@ -1,0 +1,504 @@
+{
+  "nodes": [
+    {
+      "id": "ministry_budget_厚生労働省",
+      "name": "厚生労働省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "厚生労働省",
+        "budget": 79177406894000,
+        "execution": 64375867507752.7
+      }
+    },
+    {
+      "id": "ministry_budget_国土交通省",
+      "name": "国土交通省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "国土交通省",
+        "budget": 5503202132000,
+        "execution": 4726818460234
+      }
+    },
+    {
+      "id": "ministry_budget_文部科学省",
+      "name": "文部科学省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "文部科学省",
+        "budget": 5207244880000,
+        "execution": 3628926735927
+      }
+    },
+    {
+      "id": "ministry_budget_内閣府",
+      "name": "内閣府",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "内閣府",
+        "budget": 2790320511000,
+        "execution": 920615192842643.2
+      }
+    },
+    {
+      "id": "ministry_budget_防衛省",
+      "name": "防衛省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "防衛省",
+        "budget": 2753888729550,
+        "execution": 2705585576547
+      }
+    },
+    {
+      "id": "ministry_budget_農林水産省",
+      "name": "農林水産省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "農林水産省",
+        "budget": 2523336623000,
+        "execution": 3667971265252.7207
+      }
+    },
+    {
+      "id": "ministry_budget_復興庁",
+      "name": "復興庁",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "復興庁",
+        "budget": 2390108380710,
+        "execution": 3274759003241
+      }
+    },
+    {
+      "id": "ministry_budget_経済産業省",
+      "name": "経済産業省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "経済産業省",
+        "budget": 1483650753000,
+        "execution": 1823535221011
+      }
+    },
+    {
+      "id": "ministry_budget_総務省",
+      "name": "総務省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "総務省",
+        "budget": 590817231000,
+        "execution": 1424728704566
+      }
+    },
+    {
+      "id": "ministry_budget_財務省",
+      "name": "財務省",
+      "type": "ministry",
+      "column": 0,
+      "metadata": {
+        "ministry": "財務省",
+        "budget": 545468000000,
+        "execution": 356334267648
+      }
+    },
+    {
+      "id": "ministry_others_budget",
+      "name": "その他10府省庁",
+      "type": "others",
+      "column": 0,
+      "metadata": {
+        "ministry": "その他府省庁",
+        "budget": 1296566579000,
+        "execution": 143233842701222.3,
+        "ministryList": [
+          {
+            "name": "外務省",
+            "budget": 527165372000,
+            "execution": 551710477700
+          },
+          {
+            "name": "環境省",
+            "budget": 283725578000,
+            "execution": 142120053130468
+          },
+          {
+            "name": "法務省",
+            "budget": 207395600000,
+            "execution": 237666894000
+          },
+          {
+            "name": "国家公安委員会（警察庁）",
+            "budget": 166592981000,
+            "execution": 168041258130
+          },
+          {
+            "name": "内閣官房",
+            "budget": 59914366000,
+            "execution": 108524090000
+          },
+          {
+            "name": "原子力規制委員会",
+            "budget": 38155000000,
+            "execution": 34515794475
+          },
+          {
+            "name": "消費者庁",
+            "budget": 10628574000,
+            "execution": 11237345781.3
+          },
+          {
+            "name": "金融庁",
+            "budget": 1670590000,
+            "execution": 1319730000
+          },
+          {
+            "name": "公正取引委員会",
+            "budget": 950850000,
+            "execution": 630900668
+          },
+          {
+            "name": "個人情報保護委員会",
+            "budget": 367668000,
+            "execution": 143080000
+          }
+        ]
+      }
+    },
+    {
+      "id": "total_budget",
+      "name": "予算総計",
+      "type": "total",
+      "column": 1,
+      "metadata": {
+        "budget": 104262010713260
+      }
+    },
+    {
+      "id": "total_execution",
+      "name": "支出総計",
+      "type": "total",
+      "column": 2,
+      "metadata": {
+        "execution": 1149833562286045
+      }
+    },
+    {
+      "id": "difference_execution_excess",
+      "name": "差額（支出超過）",
+      "type": "difference",
+      "column": 1,
+      "metadata": {
+        "differenceData": {
+          "budgetTotal": 104262010713260,
+          "executionTotal": 1149833562286045,
+          "difference": 1045571551572785,
+          "direction": "execution-excess"
+        }
+      }
+    },
+    {
+      "id": "ministry_execution_内閣府",
+      "name": "内閣府",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "内閣府",
+        "execution": 920615192842643.2,
+        "budget": 2790320511000
+      }
+    },
+    {
+      "id": "ministry_execution_環境省",
+      "name": "環境省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "環境省",
+        "execution": 142120053130468,
+        "budget": 283725578000
+      }
+    },
+    {
+      "id": "ministry_execution_厚生労働省",
+      "name": "厚生労働省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "厚生労働省",
+        "execution": 64375867507752.7,
+        "budget": 79177406894000
+      }
+    },
+    {
+      "id": "ministry_execution_国土交通省",
+      "name": "国土交通省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "国土交通省",
+        "execution": 4726818460234,
+        "budget": 5503202132000
+      }
+    },
+    {
+      "id": "ministry_execution_農林水産省",
+      "name": "農林水産省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "農林水産省",
+        "execution": 3667971265252.7207,
+        "budget": 2523336623000
+      }
+    },
+    {
+      "id": "ministry_execution_文部科学省",
+      "name": "文部科学省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "文部科学省",
+        "execution": 3628926735927,
+        "budget": 5207244880000
+      }
+    },
+    {
+      "id": "ministry_execution_復興庁",
+      "name": "復興庁",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "復興庁",
+        "execution": 3274759003241,
+        "budget": 2390108380710
+      }
+    },
+    {
+      "id": "ministry_execution_防衛省",
+      "name": "防衛省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "防衛省",
+        "execution": 2705585576547,
+        "budget": 2753888729550
+      }
+    },
+    {
+      "id": "ministry_execution_経済産業省",
+      "name": "経済産業省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "経済産業省",
+        "execution": 1823535221011,
+        "budget": 1483650753000
+      }
+    },
+    {
+      "id": "ministry_execution_総務省",
+      "name": "総務省",
+      "type": "ministry",
+      "column": 3,
+      "metadata": {
+        "ministry": "総務省",
+        "execution": 1424728704566,
+        "budget": 590817231000
+      }
+    },
+    {
+      "id": "ministry_others_execution",
+      "name": "その他10府省庁",
+      "type": "others",
+      "column": 3,
+      "metadata": {
+        "ministry": "その他府省庁",
+        "execution": 1470123838402.3,
+        "budget": 1558309001000,
+        "ministryList": [
+          {
+            "name": "外務省",
+            "budget": 527165372000,
+            "execution": 551710477700
+          },
+          {
+            "name": "財務省",
+            "budget": 545468000000,
+            "execution": 356334267648
+          },
+          {
+            "name": "法務省",
+            "budget": 207395600000,
+            "execution": 237666894000
+          },
+          {
+            "name": "国家公安委員会（警察庁）",
+            "budget": 166592981000,
+            "execution": 168041258130
+          },
+          {
+            "name": "内閣官房",
+            "budget": 59914366000,
+            "execution": 108524090000
+          },
+          {
+            "name": "原子力規制委員会",
+            "budget": 38155000000,
+            "execution": 34515794475
+          },
+          {
+            "name": "消費者庁",
+            "budget": 10628574000,
+            "execution": 11237345781.3
+          },
+          {
+            "name": "金融庁",
+            "budget": 1670590000,
+            "execution": 1319730000
+          },
+          {
+            "name": "公正取引委員会",
+            "budget": 950850000,
+            "execution": 630900668
+          },
+          {
+            "name": "個人情報保護委員会",
+            "budget": 367668000,
+            "execution": 143080000
+          }
+        ]
+      }
+    }
+  ],
+  "links": [
+    {
+      "source": "ministry_budget_厚生労働省",
+      "target": "total_budget",
+      "value": 79177406894000
+    },
+    {
+      "source": "ministry_budget_国土交通省",
+      "target": "total_budget",
+      "value": 5503202132000
+    },
+    {
+      "source": "ministry_budget_文部科学省",
+      "target": "total_budget",
+      "value": 5207244880000
+    },
+    {
+      "source": "ministry_budget_内閣府",
+      "target": "total_budget",
+      "value": 2790320511000
+    },
+    {
+      "source": "ministry_budget_防衛省",
+      "target": "total_budget",
+      "value": 2753888729550
+    },
+    {
+      "source": "ministry_budget_農林水産省",
+      "target": "total_budget",
+      "value": 2523336623000
+    },
+    {
+      "source": "ministry_budget_復興庁",
+      "target": "total_budget",
+      "value": 2390108380710
+    },
+    {
+      "source": "ministry_budget_経済産業省",
+      "target": "total_budget",
+      "value": 1483650753000
+    },
+    {
+      "source": "ministry_budget_総務省",
+      "target": "total_budget",
+      "value": 590817231000
+    },
+    {
+      "source": "ministry_budget_財務省",
+      "target": "total_budget",
+      "value": 545468000000
+    },
+    {
+      "source": "ministry_others_budget",
+      "target": "total_budget",
+      "value": 1296566579000
+    },
+    {
+      "source": "total_budget",
+      "target": "total_execution",
+      "value": 104262010713260
+    },
+    {
+      "source": "difference_execution_excess",
+      "target": "total_execution",
+      "value": 1045571551572785
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_内閣府",
+      "value": 920615192842643.2
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_環境省",
+      "value": 142120053130468
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_厚生労働省",
+      "value": 64375867507752.7
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_国土交通省",
+      "value": 4726818460234
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_農林水産省",
+      "value": 3667971265252.7207
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_文部科学省",
+      "value": 3628926735927
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_復興庁",
+      "value": 3274759003241
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_防衛省",
+      "value": 2705585576547
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_経済産業省",
+      "value": 1823535221011
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_execution_総務省",
+      "value": 1424728704566
+    },
+    {
+      "source": "total_execution",
+      "target": "ministry_others_execution",
+      "value": 1470123838402.3
+    }
+  ]
+}

@@ -10,8 +10,8 @@ import {
   loadPreprocessedStatistics,
   loadPreprocessedMinistryProjects,
 } from '@/server/loaders/json-data-loader';
-import SankeyChartWithSettings from '@/client/components/SankeyChartWithSettings';
 import YearSelector from '@/client/components/YearSelector';
+import YearPageClient from '@/client/components/YearPageClient';
 import type { SankeyNode, SankeyLink } from '@/types/sankey';
 
 interface Props {
@@ -152,29 +152,12 @@ export default async function YearPage({ params, searchParams }: Props) {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <SankeyChartWithSettings
-            data={displaySankeyData}
-            year={year}
-            breadcrumbsSlot={
-              <nav className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400">
-                  ホーム
-                </Link>
-                <span>/</span>
-                <Link href={`/${year}`} className="hover:text-blue-600 dark:hover:text-blue-400">
-                  {year}年度
-                </Link>
-                {resolvedSearchParams.ministry && (
-                  <>
-                    <span>/</span>
-                    <span className="text-gray-900 dark:text-white">{resolvedSearchParams.ministry}</span>
-                  </>
-                )}
-              </nav>
-            }
-          />
-        </div>
+        <YearPageClient
+          year={year}
+          displaySankeyData={displaySankeyData}
+          statistics={statistics}
+          ministry={resolvedSearchParams.ministry}
+        />
       </div>
 
       {/* Footer */}
