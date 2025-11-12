@@ -313,6 +313,12 @@ function generate6ColumnMainSankeyData(
     return budgetYear === year;
   });
 
+  // 対象年度の支出先データのみをフィルター
+  const currentYearExpenditureData = expenditureData.filter((exp) => {
+    const expYear = exp.事業年度;
+    return expYear === year;
+  });
+
   // 府省庁ごとに集約（予算と支出）
   const ministryData = new Map<
     string,
@@ -326,6 +332,7 @@ function generate6ColumnMainSankeyData(
   let totalBudget = 0;
   let totalExecution = 0;
 
+  // 予算データから予算金額を集計
   currentYearBudgetData.forEach((budget) => {
     const ministry = budget.府省庁;
     const projectId = budget.予算事業ID;
@@ -333,28 +340,53 @@ function generate6ColumnMainSankeyData(
     if (!ministry || !projectId || !projectName) return;
 
     const budgetAmount = normalizeAmount(budget['当初予算(合計)'] || budget['当初予算（合計）'] || 0, year);
-    const executionAmount = normalizeAmount(budget['執行額'] || 0, year);
 
     if (!ministryData.has(ministry)) {
       ministryData.set(ministry, { budget: 0, execution: 0, projects: new Map() });
     }
     const data = ministryData.get(ministry)!;
     data.budget += budgetAmount;
-    data.execution += executionAmount;
     totalBudget += budgetAmount;
-    totalExecution += executionAmount;
 
     // 事業データを集約
-    if (data.projects.has(projectId)) {
-      const project = data.projects.get(projectId)!;
-      project.budget += budgetAmount;
-      project.execution += executionAmount;
-    } else {
+    if (!data.projects.has(projectId)) {
       data.projects.set(projectId, {
         name: projectName,
         budget: budgetAmount,
-        execution: executionAmount,
+        execution: 0,
       });
+    } else {
+      const project = data.projects.get(projectId)!;
+      project.budget += budgetAmount;
+    }
+  });
+
+  // 支出先データから支出金額を集計
+  currentYearExpenditureData.forEach((exp) => {
+    const ministry = exp.府省庁;
+    const projectId = exp.予算事業ID;
+    const projectName = exp.事業名;
+    if (!ministry || !projectId || !projectName) return;
+
+    const expenditureAmount = normalizeAmount(exp.金額 || 0, year);
+
+    if (!ministryData.has(ministry)) {
+      ministryData.set(ministry, { budget: 0, execution: 0, projects: new Map() });
+    }
+    const data = ministryData.get(ministry)!;
+    data.execution += expenditureAmount;
+    totalExecution += expenditureAmount;
+
+    // 事業データを集約
+    if (!data.projects.has(projectId)) {
+      data.projects.set(projectId, {
+        name: projectName,
+        budget: 0,
+        execution: expenditureAmount,
+      });
+    } else {
+      const project = data.projects.get(projectId)!;
+      project.execution += expenditureAmount;
     }
   });
 
