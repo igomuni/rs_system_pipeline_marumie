@@ -17,11 +17,11 @@ export default function SankeyChartNivo({ data, year }: Props) {
   const [nivoData, setNivoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Nivo形式のJSONを直接読み込む
+  // Nivo形式のJSONを直接読み込む（トポロジーベース版）
   useEffect(() => {
     async function loadNivoData() {
       try {
-        const response = await fetch(`/data/year_${year}/sankey-main-nivo.json`);
+        const response = await fetch(`/data/year_${year}/sankey-main-topology-nivo.json`);
         const jsonData = await response.json();
         setNivoData(jsonData);
       } catch (error) {
@@ -54,7 +54,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
       <ResponsiveSankey
         data={nivoData}
         margin={{ top: 40, right: 160, bottom: 40, left: 160 }}
-        align="justify"
+        align="center"
         colors={{ scheme: 'category10' }}
         nodeOpacity={1}
         nodeHoverOthersOpacity={0.35}
