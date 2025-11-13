@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ResponsiveSankey } from '@nivo/sankey';
 import type { SankeyData } from '@/types/sankey';
 import type { Year } from '@/types/rs-system';
 import { formatBudget } from '@/client/lib/formatBudget';
 import { useSankeyConfig } from '@/client/hooks/useSankeyConfig';
+import SankeyNodeDetailModal from './SankeyNodeDetailModal';
 
 interface Props {
   data: SankeyData;
@@ -16,6 +17,19 @@ export default function SankeyChartNivo({ data, year }: Props) {
   const { config, isLoaded } = useSankeyConfig();
   const [nivoData, setNivoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    nodeId: string;
+    nodeName: string;
+    nodeType: string;
+    nodeMetadata?: any;
+  }>({
+    isOpen: false,
+    nodeId: '',
+    nodeName: '',
+    nodeType: '',
+    nodeMetadata: undefined,
+  });
 
   // Nivo形式のJSONを直接読み込み、色を設定（トポロジーベース版）
   useEffect(() => {
@@ -52,17 +66,44 @@ export default function SankeyChartNivo({ data, year }: Props) {
     loadNivoData();
   }, [year, data, config]);
 
+  // 利用可能な府省庁リストを取得
+  const availableMinistries = useMemo(() => {
+    const ministries = new Set<string>();
+    data.nodes.forEach((node) => {
+      if (node.type === 'ministry' && node.metadata?.ministry) {
+        ministries.add(node.metadata.ministry);
+      }
+    });
+    return Array.from(ministries).sort();
+  }, [data]);
+
+  // ノードクリックハンドラー
+  const handleNodeClick = (node: any) => {
+    const originalNode = data.nodes.find((n) => n.id === node.id);
+    if (!originalNode) return;
+
+    setModalState({
+      isOpen: true,
+      nodeId: originalNode.id,
+      nodeName: originalNode.name,
+      nodeType: originalNode.type,
+      nodeMetadata: originalNode.metadata,
+    });
+  };
+
   if (!isLoaded || loading || !nivoData) {
     return <div className="flex items-center justify-center h-[600px]">読み込み中...</div>;
   }
 
   return (
-    <div className="h-[600px] w-full">
-      <ResponsiveSankey
-        data={nivoData}
-        margin={{ top: 40, right: 160, bottom: 40, left: 160 }}
-        align="center"
-        colors={(node: any) => node.nodeColor}
+    <>
+      <div className="h-[600px] w-full">
+        <ResponsiveSankey
+          data={nivoData}
+          margin={{ top: 40, right: 160, bottom: 40, left: 160 }}
+          align="center"
+          colors={(node: any) => node.nodeColor}
+          onClick={(node: any) => handleNodeClick(node)}
         nodeOpacity={1}
         nodeHoverOthersOpacity={0.35}
         nodeThickness={18}
@@ -151,6 +192,18 @@ export default function SankeyChartNivo({ data, year }: Props) {
         }}
       />
     </div>
+
+      <SankeyNodeDetailModal
+        isOpen={modalState.isOpen}
+        onClose={() => setModalState({ ...modalState, isOpen: false })}
+        nodeId={modalState.nodeId}
+        nodeName={modalState.nodeName}
+        nodeType={modalState.nodeType}
+        nodeMetadata={modalState.nodeMetadata}
+        year={year}
+        availableMinistries={availableMinistries}
+      />
+    </>
   );
 }
 
