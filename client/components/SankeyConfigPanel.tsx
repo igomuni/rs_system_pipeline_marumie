@@ -208,6 +208,58 @@ export default function SankeyConfigPanel({ isOpen, onClose, onSaved }: Props) {
                 </div>
               </div>
 
+              {/* 総計ノードの色 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  総計ノードの色
+                </label>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded border border-gray-300 dark:border-gray-600 flex-shrink-0"
+                    style={{ backgroundColor: localConfig.totalColor }}
+                  />
+                  <input
+                    type="text"
+                    value={localConfig.totalColor}
+                    onChange={(e) => {
+                      const newColor = e.target.value;
+                      const hexValue = newColor.startsWith('#') ? newColor : `#${newColor}`;
+                      if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue) && hexValue.length === 7) {
+                        setLocalConfig({ ...localConfig, totalColor: hexValue });
+                      }
+                    }}
+                    placeholder="#94a3b8"
+                    className="w-28 px-2 py-1 text-sm font-mono border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              {/* 差額ノードの色 */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  差額ノードの色
+                </label>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="w-8 h-8 rounded border border-gray-300 dark:border-gray-600 flex-shrink-0"
+                    style={{ backgroundColor: localConfig.differenceColor }}
+                  />
+                  <input
+                    type="text"
+                    value={localConfig.differenceColor}
+                    onChange={(e) => {
+                      const newColor = e.target.value;
+                      const hexValue = newColor.startsWith('#') ? newColor : `#${newColor}`;
+                      if (/^#[0-9A-Fa-f]{0,6}$/.test(hexValue) && hexValue.length === 7) {
+                        setLocalConfig({ ...localConfig, differenceColor: hexValue });
+                      }
+                    }}
+                    placeholder="#9ca3af"
+                    className="w-28 px-2 py-1 text-sm font-mono border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              </div>
+
               {/* 府省庁ごとの色設定 */}
               <div className="mt-6">
                 <div className="flex items-center justify-between mb-3">

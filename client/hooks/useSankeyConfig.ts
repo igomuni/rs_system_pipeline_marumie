@@ -38,6 +38,11 @@ export function useSankeyConfig() {
           parsed.topN = DEFAULT_SANKEY_CONFIG.topN;
         }
 
+        // マイグレーション: totalColorが存在しない場合はデフォルト値を設定
+        if (!parsed.totalColor) {
+          parsed.totalColor = DEFAULT_SANKEY_CONFIG.totalColor;
+        }
+
         // ministryColorMappingをデフォルトとマージ（新しい府省庁を追加）
         if (parsed.ministryColorMapping) {
           const defaultMinistries = Object.keys(DEFAULT_SANKEY_CONFIG.ministryColorMapping);

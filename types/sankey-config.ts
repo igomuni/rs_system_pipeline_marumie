@@ -20,6 +20,7 @@ export interface SankeyConfig {
   ministryColorMapping: Record<string, string>; // 府省庁名 → 色のマッピング
   othersColor: string; // TopN以外の「残りN」「その他」の色（デフォルト: グレー）
   differenceColor: string; // 差額ノードの色（デフォルト: グレー）
+  totalColor: string; // 総計ノードの色（デフォルト: グレー）
 }
 
 // デフォルト設定
@@ -81,6 +82,7 @@ export const DEFAULT_SANKEY_CONFIG: SankeyConfig = {
   },
   othersColor: '#6b7280', // グレー
   differenceColor: '#9ca3af', // グレー（差額ノード用）
+  totalColor: '#94a3b8', // グレー系（総計ノード用）
 };
 
 // LocalStorageのキー

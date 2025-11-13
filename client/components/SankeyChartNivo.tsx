@@ -214,7 +214,7 @@ function getNodeColor(node: any, config: any): string {
   }
 
   if (node.type === 'total') {
-    return '#10b981';
+    return config.totalColor || '#94a3b8';
   }
 
   if (node.type === 'difference') {
