@@ -339,7 +339,7 @@ export default function SankeyNodeDetailModal({
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-64 overflow-y-auto">
+                  <div className="absolute z-20 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-64 overflow-y-auto">
                     {/* 全選択/全解除 */}
                     <label className="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600">
                       <input
@@ -407,7 +407,8 @@ export default function SankeyNodeDetailModal({
                   value={expenditureNameFilter}
                   onChange={(e) => setExpenditureNameFilter(e.target.value)}
                   placeholder="支出先で検索"
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={groupByProject}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -420,8 +421,8 @@ export default function SankeyNodeDetailModal({
             <div className="flex items-center justify-center h-full">読み込み中...</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-10">
-                <tr>
+              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-[5] shadow-sm">
+                <tr className="border-b-2 border-gray-300 dark:border-gray-600">
                   <th
                     className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
                     onClick={() => handleSort('ministry')}
