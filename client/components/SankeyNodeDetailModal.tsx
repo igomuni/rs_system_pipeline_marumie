@@ -45,6 +45,8 @@ export default function SankeyNodeDetailModal({
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [projectNameFilter, setProjectNameFilter] = useState('');
+  const [expenditureNameFilter, setExpenditureNameFilter] = useState('');
 
   // ノードタイプに応じた初期設定
   useEffect(() => {
@@ -125,9 +127,17 @@ export default function SankeyNodeDetailModal({
     loadData();
   }, [isOpen, selectedMinistries, groupByProject, year]);
 
-  // ソート処理
+  // フィルタリングとソート処理
   const sortedData = useMemo(() => {
-    const sorted = [...data].sort((a, b) => {
+    // テキストフィルタリング
+    let filtered = data.filter((item) => {
+      const matchProject = projectNameFilter === '' || item.projectName.toLowerCase().includes(projectNameFilter.toLowerCase());
+      const matchExpenditure = expenditureNameFilter === '' || item.expenditureName.toLowerCase().includes(expenditureNameFilter.toLowerCase());
+      return matchProject && matchExpenditure;
+    });
+
+    // ソート
+    const sorted = [...filtered].sort((a, b) => {
       let aValue: any;
       let bValue: any;
 
@@ -168,7 +178,7 @@ export default function SankeyNodeDetailModal({
     });
 
     return sorted;
-  }, [data, sortColumn, sortDirection]);
+  }, [data, sortColumn, sortDirection, projectNameFilter, expenditureNameFilter]);
 
   // ソートハンドラー
   const handleSort = (column: SortColumn) => {
@@ -314,66 +324,92 @@ export default function SankeyNodeDetailModal({
 
         {/* フィルタ設定 */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* 府省庁フィルタ（カスタムドロップダウン） */}
-            <div className="w-64 relative" ref={dropdownRef}>
-              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">府省庁</label>
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
-              >
-                <span className="truncate">{getDropdownDisplayText()}</span>
-                <span className="ml-2 text-gray-400">▼</span>
-              </button>
+          <div className="flex flex-col gap-3">
+            {/* 1行目: 府省庁フィルタと支出先まとめチェックボックス */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* 府省庁フィルタ（カスタムドロップダウン） */}
+              <div className="w-64 relative" ref={dropdownRef}>
+                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">府省庁</label>
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
+                >
+                  <span className="truncate">{getDropdownDisplayText()}</span>
+                  <span className="ml-2 text-gray-400">▼</span>
+                </button>
 
-              {isDropdownOpen && (
-                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-64 overflow-y-auto">
-                  {/* 全選択/全解除 */}
-                  <label className="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={selectedMinistries.length === availableMinistries.length}
-                      onChange={toggleAllMinistries}
-                      className="mr-2"
-                    />
-                    <span className="text-sm font-medium">すべて選択/解除</span>
-                  </label>
-
-                  {/* 府省庁リスト */}
-                  {availableMinistries.map((ministry) => (
-                    <label
-                      key={ministry}
-                      className="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
-                    >
+                {isDropdownOpen && (
+                  <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded shadow-lg max-h-64 overflow-y-auto">
+                    {/* 全選択/全解除 */}
+                    <label className="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer border-b border-gray-200 dark:border-gray-600">
                       <input
                         type="checkbox"
-                        checked={selectedMinistries.includes(ministry)}
-                        onChange={() => toggleMinistry(ministry)}
+                        checked={selectedMinistries.length === availableMinistries.length}
+                        onChange={toggleAllMinistries}
                         className="mr-2"
                       />
-                      <span className="text-sm">{ministry}</span>
+                      <span className="text-sm font-medium">すべて選択/解除</span>
                     </label>
-                  ))}
-                </div>
-              )}
+
+                    {/* 府省庁リスト */}
+                    {availableMinistries.map((ministry) => (
+                      <label
+                        key={ministry}
+                        className="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedMinistries.includes(ministry)}
+                          onChange={() => toggleMinistry(ministry)}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{ministry}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 支出先まとめチェックボックス */}
+              <div className="flex items-center gap-2 mt-5">
+                <input
+                  type="checkbox"
+                  id="groupByProject"
+                  checked={groupByProject}
+                  onChange={(e) => setGroupByProject(e.target.checked)}
+                  className="w-4 h-4"
+                />
+                <label htmlFor="groupByProject" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                  支出先をまとめる
+                </label>
+              </div>
             </div>
 
-            {/* 支出先まとめトグル */}
-            <div className="flex flex-col">
-              <label className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">支出先をまとめる</label>
-              <button
-                onClick={() => setGroupByProject(!groupByProject)}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                  groupByProject ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-                title={groupByProject ? 'まとめる' : '展開'}
-              >
-                <span
-                  className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                    groupByProject ? 'translate-x-5' : 'translate-x-0.5'
-                  }`}
+            {/* 2行目: テキスト検索 */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* 事業名フィルタ */}
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">事業名</label>
+                <input
+                  type="text"
+                  value={projectNameFilter}
+                  onChange={(e) => setProjectNameFilter(e.target.value)}
+                  placeholder="事業名で検索"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </button>
+              </div>
+
+              {/* 支出先フィルタ */}
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">支出先</label>
+                <input
+                  type="text"
+                  value={expenditureNameFilter}
+                  onChange={(e) => setExpenditureNameFilter(e.target.value)}
+                  placeholder="支出先で検索"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -384,7 +420,7 @@ export default function SankeyNodeDetailModal({
             <div className="flex items-center justify-center h-full">読み込み中...</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700">
+              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-10">
                 <tr>
                   <th
                     className="px-4 py-2 text-left cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 whitespace-nowrap"
