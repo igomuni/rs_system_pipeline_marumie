@@ -335,7 +335,7 @@ export default function SankeyNodeDetailModal({
                   className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 hover:border-gray-400 dark:hover:border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
                 >
                   <span className="truncate">{getDropdownDisplayText()}</span>
-                  <span className="ml-2 text-gray-400">▾</span>
+                  <span className="ml-2 text-gray-400 text-lg">▾</span>
                 </button>
 
                 {isDropdownOpen && (

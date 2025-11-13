@@ -710,17 +710,52 @@ function generate4ColumnTopologyBasedSankeyData(
   });
 
   // 支出先データから支出金額を集計
+  // 事業ごとに支出先を集約してから府省庁ごとに合計（重複を避けるため）
+  // 予算データに存在する事業のみを処理（yearlyと同じロジック）
+  const projectsByName = new Map<string, string>(); // projectName -> ministry
+  currentYearBudgetData.forEach((budget) => {
+    const projectName = budget.事業名;
+    const ministry = budget.府省庁;
+    if (!projectName || !ministry) return;
+    projectsByName.set(projectName, ministry);
+  });
+
+  const projectExpenditures = new Map<string, { ministry: string; expenditures: Map<string, number> }>();
+
   currentYearExpenditureData.forEach((exp) => {
-    const ministry = exp.府省庁;
+    const projectName = exp.事業名;
+    if (!projectName) return;
+
+    // 予算データに存在する事業のみ処理
+    const ministry = projectsByName.get(projectName);
     if (!ministry) return;
 
-    const expenditureAmount = normalizeAmount(exp.金額 || exp['支出額（百万円）'] || 0, year);
+    const expenditureName = exp.支出先名;
+    if (!expenditureName) return;
 
+    const expenditureAmount = normalizeAmount(exp.金額 || exp['支出額（百万円）'] || 0, year);
+    if (!expenditureAmount) return;
+
+    // 事業ごとに支出先を集約
+    const projectKey = `${ministry}_${projectName}`;
+    if (!projectExpenditures.has(projectKey)) {
+      projectExpenditures.set(projectKey, { ministry, expenditures: new Map() });
+    }
+
+    const project = projectExpenditures.get(projectKey)!;
+    const currentAmount = project.expenditures.get(expenditureName) || 0;
+    project.expenditures.set(expenditureName, currentAmount + expenditureAmount);
+  });
+
+  // 事業ごとに集約された支出先から府省庁ごとの支出額を計算
+  projectExpenditures.forEach((project) => {
+    const ministry = project.ministry;
     if (!ministryData.has(ministry)) {
       ministryData.set(ministry, { budget: 0, execution: 0 });
     }
-    const data = ministryData.get(ministry)!;
-    data.execution += expenditureAmount;
+
+    const totalProjectExecution = Array.from(project.expenditures.values()).reduce((sum, amount) => sum + amount, 0);
+    ministryData.get(ministry)!.execution += totalProjectExecution;
   });
 
   // 総予算・総支出を計算

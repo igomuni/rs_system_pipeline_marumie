@@ -10,6 +10,7 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSaved?: () => void; // 保存時のコールバック
+  showProjectSettings?: boolean; // 事業表示設定を表示するか（デフォルト: false）
 }
 
 // HSL to HEX converter
@@ -27,7 +28,7 @@ function hslToHex(h: number, s: number, l: number): string {
 type SortKey = 'name' | 'budget';
 type SortOrder = 'asc' | 'desc';
 
-export default function SankeyConfigPanel({ isOpen, onClose, onSaved }: Props) {
+export default function SankeyConfigPanel({ isOpen, onClose, onSaved, showProjectSettings = false }: Props) {
   const { config, updateConfig, resetConfig, isLoaded } = useSankeyConfig();
   const [localConfig, setLocalConfig] = useState<SankeyConfig>(config);
   const [sortKey, setSortKey] = useState<SortKey>('budget');
@@ -69,28 +70,30 @@ export default function SankeyConfigPanel({ isOpen, onClose, onSaved }: Props) {
           </div>
 
           <div className="space-y-6">
-            {/* Top N設定 */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">事業表示設定</h3>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Top N事業の表示数
-                </label>
-                <input
-                  type="number"
-                  min="5"
-                  max="50"
-                  value={localConfig.topProjectsCount}
-                  onChange={(e) =>
-                    setLocalConfig({ ...localConfig, topProjectsCount: parseInt(e.target.value) || 20 })
-                  }
-                  className="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                />
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  全府省庁からTop N事業を表示します（デフォルト: 20）
-                </p>
+            {/* Top N設定（D3版のみ） */}
+            {showProjectSettings && (
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">事業表示設定</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Top N事業の表示数
+                  </label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="50"
+                    value={localConfig.topProjectsCount}
+                    onChange={(e) =>
+                      setLocalConfig({ ...localConfig, topProjectsCount: parseInt(e.target.value) || 20 })
+                    }
+                    className="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    全府省庁からTop N事業を表示します（デフォルト: 20）
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 府省庁閾値設定 */}
             <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
