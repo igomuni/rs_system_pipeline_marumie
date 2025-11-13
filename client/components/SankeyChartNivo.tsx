@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ResponsiveSankey } from '@nivo/sankey';
 import type { SankeyData } from '@/types/sankey';
 import type { Year } from '@/types/rs-system';
@@ -17,13 +17,20 @@ export default function SankeyChartNivo({ data, year }: Props) {
   const [nivoData, setNivoData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Nivo形式のJSONを直接読み込む（トポロジーベース版）
+  // Nivo形式のJSONを直接読み込み、色を設定（トポロジーベース版）
   useEffect(() => {
     async function loadNivoData() {
       try {
         const response = await fetch(`/data/year_${year}/sankey-main-topology-nivo.json`);
         const jsonData = await response.json();
-        setNivoData(jsonData);
+
+        // ノードに色を設定
+        const nodesWithColor = jsonData.nodes.map((node: any) => ({
+          ...node,
+          nodeColor: getNodeColor(node, config),
+        }));
+
+        setNivoData({ ...jsonData, nodes: nodesWithColor });
       } catch (error) {
         console.error('Failed to load Nivo data:', error);
         // フォールバック: クライアント側で変換
@@ -55,7 +62,7 @@ export default function SankeyChartNivo({ data, year }: Props) {
         data={nivoData}
         margin={{ top: 40, right: 160, bottom: 40, left: 160 }}
         align="center"
-        colors={{ scheme: 'category10' }}
+        colors={(node: any) => node.nodeColor}
         nodeOpacity={1}
         nodeHoverOthersOpacity={0.35}
         nodeThickness={18}
@@ -96,7 +103,8 @@ export default function SankeyChartNivo({ data, year }: Props) {
           if (originalNode.type === 'ministry') {
             const budget = originalNode.metadata?.budget || 0;
             const execution = originalNode.metadata?.execution || 0;
-            const value = budget || execution;
+            // 支出ノード（ministry_execution_*）の場合は支出金額を優先
+            const value = originalNode.id.includes('execution') ? execution : budget;
             return `${originalNode.name}\n${formatBudget(value)}`;
           }
 
@@ -108,19 +116,19 @@ export default function SankeyChartNivo({ data, year }: Props) {
           if (!originalNode) return null;
 
           return (
-            <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="font-bold mb-1">{originalNode.name}</div>
+            <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-lg border border-gray-200 dark:border-gray-700 min-w-[250px]">
+              <div className="font-bold mb-1 whitespace-nowrap">{originalNode.name}</div>
               {originalNode.metadata?.budget && (
-                <div>予算: {formatBudget(originalNode.metadata.budget)}</div>
+                <div className="whitespace-nowrap">予算: {formatBudget(originalNode.metadata.budget)}</div>
               )}
               {originalNode.metadata?.execution && (
-                <div>支出: {formatBudget(originalNode.metadata.execution)}</div>
+                <div className="whitespace-nowrap">支出: {formatBudget(originalNode.metadata.execution)}</div>
               )}
               {originalNode.metadata?.differenceData && (
                 <div className="mt-2">
-                  <div>予算総計: {formatBudget(originalNode.metadata.differenceData.budgetTotal)}</div>
-                  <div>支出総計: {formatBudget(originalNode.metadata.differenceData.executionTotal)}</div>
-                  <div className="font-bold mt-1">
+                  <div className="whitespace-nowrap">予算総計: {formatBudget(originalNode.metadata.differenceData.budgetTotal)}</div>
+                  <div className="whitespace-nowrap">支出総計: {formatBudget(originalNode.metadata.differenceData.executionTotal)}</div>
+                  <div className="font-bold mt-1 whitespace-nowrap">
                     差額: {formatBudget(originalNode.metadata.differenceData.difference)}
                   </div>
                 </div>
@@ -133,11 +141,11 @@ export default function SankeyChartNivo({ data, year }: Props) {
           const targetNode = data.nodes.find((n) => n.id === link.target.id);
 
           return (
-            <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="font-bold mb-1">
+            <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-lg border border-gray-200 dark:border-gray-700 min-w-[250px]">
+              <div className="font-bold mb-1 whitespace-nowrap">
                 {sourceNode?.name} → {targetNode?.name}
               </div>
-              <div>{formatBudget(link.value)}</div>
+              <div className="whitespace-nowrap">{formatBudget(link.value)}</div>
             </div>
           );
         }}
