@@ -28,7 +28,7 @@ export default function SankeyChartNivoWithSettings({ data, year, breadcrumbsSlo
         </button>
       </div>
 
-      {/* Config Panel - Nivo版は色設定のみ（事業表示設定は非表示） */}
+      {/* Config Panel - Nivo版は色設定のみ（事業・府省庁表示設定は非表示） */}
       <SankeyConfigPanel
         isOpen={isConfigPanelOpen}
         onClose={() => setIsConfigPanelOpen(false)}
@@ -36,6 +36,7 @@ export default function SankeyChartNivoWithSettings({ data, year, breadcrumbsSlo
           // 設定保存後、チャートを再描画するために何もしない（自動的に反映される）
         }}
         showProjectSettings={false}
+        showMinistryThreshold={false}
       />
 
       {/* Sankey Chart */}

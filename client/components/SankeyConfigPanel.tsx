@@ -11,6 +11,7 @@ interface Props {
   onClose: () => void;
   onSaved?: () => void; // 保存時のコールバック
   showProjectSettings?: boolean; // 事業表示設定を表示するか（デフォルト: false）
+  showMinistryThreshold?: boolean; // 府省庁閾値設定を表示するか（デフォルト: false、Nivo版では不要）
 }
 
 // HSL to HEX converter
@@ -28,7 +29,7 @@ function hslToHex(h: number, s: number, l: number): string {
 type SortKey = 'name' | 'budget';
 type SortOrder = 'asc' | 'desc';
 
-export default function SankeyConfigPanel({ isOpen, onClose, onSaved, showProjectSettings = false }: Props) {
+export default function SankeyConfigPanel({ isOpen, onClose, onSaved, showProjectSettings = false, showMinistryThreshold = false }: Props) {
   const { config, updateConfig, resetConfig, isLoaded } = useSankeyConfig();
   const [localConfig, setLocalConfig] = useState<SankeyConfig>(config);
   const [sortKey, setSortKey] = useState<SortKey>('budget');
@@ -95,9 +96,10 @@ export default function SankeyConfigPanel({ isOpen, onClose, onSaved, showProjec
               </div>
             )}
 
-            {/* 府省庁閾値設定 */}
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">府省庁表示設定</h3>
+            {/* 府省庁閾値設定（D3版のみ） */}
+            {showMinistryThreshold && (
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-6">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">府省庁表示設定</h3>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -179,7 +181,8 @@ export default function SankeyConfigPanel({ isOpen, onClose, onSaved, showProjec
                   </p>
                 </div>
               )}
-            </div>
+              </div>
+            )}
 
             {/* 色分け設定 */}
             <div className="pb-6">

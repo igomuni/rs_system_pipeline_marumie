@@ -138,9 +138,9 @@ export default function SankeyChartNivo({ data, year }: Props) {
           from: 'color',
           modifiers: [['darker', 1]],
         }}
-        // カスタムラベル
+        // カスタムラベル（nivoDataから取得）
         label={(node) => {
-          const originalNode = data.nodes.find((n) => n.id === node.id);
+          const originalNode = nivoData.nodes.find((n: any) => n.id === node.id);
           if (!originalNode) return node.id;
 
           // ノードタイプに応じたラベル
@@ -164,9 +164,9 @@ export default function SankeyChartNivo({ data, year }: Props) {
 
           return originalNode.name;
         }}
-        // ツールチップ
+        // ツールチップ（nivoDataから取得）
         nodeTooltip={({ node }: any) => {
-          const originalNode = data.nodes.find((n) => n.id === node.id);
+          const originalNode = nivoData.nodes.find((n: any) => n.id === node.id);
           if (!originalNode) return null;
 
           return (
@@ -191,8 +191,8 @@ export default function SankeyChartNivo({ data, year }: Props) {
           );
         }}
         linkTooltip={({ link }: any) => {
-          const sourceNode = data.nodes.find((n) => n.id === link.source.id);
-          const targetNode = data.nodes.find((n) => n.id === link.target.id);
+          const sourceNode = nivoData.nodes.find((n: any) => n.id === link.source.id);
+          const targetNode = nivoData.nodes.find((n: any) => n.id === link.target.id);
 
           return (
             <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-lg border border-gray-200 dark:border-gray-700 min-w-[250px]">
