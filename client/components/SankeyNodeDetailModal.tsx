@@ -70,64 +70,42 @@ export default function SankeyNodeDetailModal({
     async function loadData() {
       setLoading(true);
       try {
-        // プロジェクトインデックスを読み込み
-        const response = await fetch('/data/project-index.json');
-        const projectIndex = await response.json();
-
-        // 選択された府省庁のプロジェクトを抽出
-        const filteredProjects = projectIndex.filter((p: any) =>
-          selectedMinistries.includes(p.ministry)
-        );
-
-        // 各プロジェクトの支出先データを読み込み
-        const detailPromises = filteredProjects.map(async (project: any) => {
-          try {
-            const detailResponse = await fetch(`/data/projects/${project.projectKey}.json`);
-            const detail = await detailResponse.json();
-            return { ...project, topExpenditures: detail.topExpenditures || [] };
-          } catch {
-            return { ...project, topExpenditures: [] };
-          }
-        });
-
-        const projectsWithExpenditures = await Promise.all(detailPromises);
+        // 年度ごとの全プロジェクトの支出先データを読み込み
+        const response = await fetch(`/data/year_${year}/yearly-project-expenditures.json`);
+        const yearlyExpenditures = await response.json();
 
         // データを展開
         const details: ExpenditureDetail[] = [];
-        for (const project of projectsWithExpenditures) {
-          const yearData = project.yearlyData?.[year];
-          if (!yearData) continue;
+
+        // 選択された府省庁のプロジェクトのみを処理
+        Object.values(yearlyExpenditures).forEach((project: any) => {
+          if (!selectedMinistries.includes(project.ministry)) return;
 
           if (groupByProject) {
             // 事業名でまとめる
-            const totalExecution = project.topExpenditures.reduce(
-              (sum: number, exp: any) => sum + (exp.yearlyAmounts?.[year] || 0),
-              0
-            );
             details.push({
               ministry: project.ministry,
               projectName: project.projectName,
               expenditureName: '', // まとめる場合は空
-              budget: yearData.budget || 0,
-              execution: totalExecution,
-              expenditureCount: project.topExpenditures.length,
+              budget: project.budget || 0,
+              execution: project.totalExecution || 0,
+              expenditureCount: project.expenditures?.length || 0,
             });
           } else {
             // 支出先ごとに展開
-            for (const exp of project.topExpenditures) {
-              const yearAmount = exp.yearlyAmounts?.[year] || 0;
-              if (yearAmount > 0) {
+            if (project.expenditures) {
+              for (const exp of project.expenditures) {
                 details.push({
                   ministry: project.ministry,
                   projectName: project.projectName,
                   expenditureName: exp.name,
-                  budget: yearData.budget || 0,
-                  execution: yearAmount,
+                  budget: project.budget || 0,
+                  execution: exp.amount || 0,
                 });
               }
             }
           }
-        }
+        });
 
         setData(details);
       } catch (error) {
