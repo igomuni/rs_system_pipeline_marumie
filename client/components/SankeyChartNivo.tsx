@@ -66,16 +66,29 @@ export default function SankeyChartNivo({ data, year }: Props) {
     loadNivoData();
   }, [year, data, config]);
 
-  // 利用可能な府省庁リストを取得
-  const availableMinistries = useMemo(() => {
-    const ministries = new Set<string>();
-    data.nodes.forEach((node) => {
-      if (node.type === 'ministry' && node.metadata?.ministry) {
-        ministries.add(node.metadata.ministry);
+  // 利用可能な府省庁リストを取得（年度ごとのministries.jsonから）
+  const [availableMinistries, setAvailableMinistries] = useState<string[]>([]);
+
+  useEffect(() => {
+    async function loadMinistries() {
+      try {
+        const response = await fetch(`/data/year_${year}/ministries.json`);
+        const ministries = await response.json();
+        setAvailableMinistries(ministries.map((m: any) => m.name));
+      } catch (error) {
+        console.error('Failed to load ministries:', error);
+        // フォールバック: ノードから取得
+        const ministries = new Set<string>();
+        data.nodes.forEach((node) => {
+          if (node.type === 'ministry' && node.metadata?.ministry) {
+            ministries.add(node.metadata.ministry);
+          }
+        });
+        setAvailableMinistries(Array.from(ministries).sort());
       }
-    });
-    return Array.from(ministries).sort();
-  }, [data]);
+    }
+    loadMinistries();
+  }, [year, data]);
 
   // ノードクリックハンドラー
   const handleNodeClick = (node: any) => {

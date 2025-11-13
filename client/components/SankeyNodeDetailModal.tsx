@@ -222,8 +222,44 @@ export default function SankeyNodeDetailModal({
     return `選択中 (${selectedMinistries.length}/${availableMinistries.length})`;
   };
 
-  // 統計情報の計算
-  const statistics = useMemo(() => {
+  // 全体統計とフィルター後統計の計算
+  const [allYearlyData, setAllYearlyData] = useState<any>(null);
+
+  // 全データ読み込み（統計用）
+  useEffect(() => {
+    if (!isOpen) return;
+
+    async function loadAllData() {
+      try {
+        const response = await fetch(`/data/year_${year}/yearly-project-expenditures.json`);
+        const data = await response.json();
+        setAllYearlyData(data);
+      } catch (error) {
+        console.error('Failed to load all data:', error);
+      }
+    }
+    loadAllData();
+  }, [isOpen, year]);
+
+  // 全体統計（フィルター前）
+  const overallStatistics = useMemo(() => {
+    if (!allYearlyData) return { totalBudget: 0, projectCount: 0, totalExecution: 0, expenditureCount: 0 };
+
+    const projects = Object.values(allYearlyData) as any[];
+    const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+    const totalExecution = projects.reduce((sum, p) => sum + (p.totalExecution || 0), 0);
+    const expenditureCount = projects.reduce((sum, p) => sum + (p.expenditures?.length || 0), 0);
+
+    return {
+      totalBudget,
+      projectCount: projects.length,
+      totalExecution,
+      expenditureCount,
+    };
+  }, [allYearlyData]);
+
+  // フィルター後統計
+  const filteredStatistics = useMemo(() => {
     const uniqueProjects = new Set(data.map((d) => d.projectName));
     const totalBudget = data.reduce((sum, d) => sum + d.budget, 0);
     const totalExecution = data.reduce((sum, d) => sum + d.execution, 0);
@@ -247,7 +283,7 @@ export default function SankeyNodeDetailModal({
         {/* ヘッダー */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-start mb-2">
-            <h2 className="text-xl font-bold">{nodeName} - 詳細</h2>
+            <h2 className="text-xl font-bold">予算と支出詳細</h2>
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -255,32 +291,32 @@ export default function SankeyNodeDetailModal({
               ✕
             </button>
           </div>
-          {/* サマリー統計 */}
+          {/* 全体統計 */}
           <div className="flex gap-6 text-sm text-gray-600 dark:text-gray-400">
             <div>
               <span className="font-medium">総予算: </span>
-              <span className="text-gray-900 dark:text-white">{formatBudget(statistics.totalBudget)}</span>
+              <span className="text-gray-900 dark:text-white">{formatBudget(overallStatistics.totalBudget)}</span>
             </div>
             <div>
               <span className="font-medium">事業数: </span>
-              <span className="text-gray-900 dark:text-white">{statistics.projectCount.toLocaleString()}</span>
+              <span className="text-gray-900 dark:text-white">{overallStatistics.projectCount.toLocaleString()}</span>
             </div>
             <div>
               <span className="font-medium">総支出: </span>
-              <span className="text-gray-900 dark:text-white">{formatBudget(statistics.totalExecution)}</span>
+              <span className="text-gray-900 dark:text-white">{formatBudget(overallStatistics.totalExecution)}</span>
             </div>
             <div>
               <span className="font-medium">支出先数: </span>
-              <span className="text-gray-900 dark:text-white">{statistics.expenditureCount.toLocaleString()}</span>
+              <span className="text-gray-900 dark:text-white">{overallStatistics.expenditureCount.toLocaleString()}</span>
             </div>
           </div>
         </div>
 
         {/* フィルタ設定 */}
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {/* 府省庁フィルタ（カスタムドロップダウン） */}
-            <div className="flex-1 min-w-[200px] relative" ref={dropdownRef}>
+            <div className="w-64 relative" ref={dropdownRef}>
               <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">府省庁</label>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -323,8 +359,8 @@ export default function SankeyNodeDetailModal({
             </div>
 
             {/* 支出先まとめトグル */}
-            <div className="flex items-center gap-1.5">
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">支出先</label>
+            <div className="flex flex-col">
+              <label className="text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">支出先をまとめる</label>
               <button
                 onClick={() => setGroupByProject(!groupByProject)}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
@@ -338,9 +374,6 @@ export default function SankeyNodeDetailModal({
                   }`}
                 />
               </button>
-              <span className="text-xs text-gray-500 dark:text-gray-400 min-w-[3rem]">
-                {groupByProject ? 'まとめ' : '展開'}
-              </span>
             </div>
           </div>
         </div>
@@ -410,16 +443,34 @@ export default function SankeyNodeDetailModal({
         </div>
 
         {/* フッター */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div className="text-sm text-gray-600 dark:text-gray-400">
-            {sortedData.length.toLocaleString()}件
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-between items-center mb-2">
+            {/* フィルター後統計 */}
+            <div className="flex gap-6 text-sm text-gray-600 dark:text-gray-400">
+              <div>
+                <span className="font-medium">予算額: </span>
+                <span className="text-gray-900 dark:text-white">{formatBudget(filteredStatistics.totalBudget)}</span>
+              </div>
+              <div>
+                <span className="font-medium">事業数: </span>
+                <span className="text-gray-900 dark:text-white">{filteredStatistics.projectCount.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="font-medium">支出額: </span>
+                <span className="text-gray-900 dark:text-white">{formatBudget(filteredStatistics.totalExecution)}</span>
+              </div>
+              <div>
+                <span className="font-medium">支出先数: </span>
+                <span className="text-gray-900 dark:text-white">{filteredStatistics.expenditureCount.toLocaleString()}</span>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              閉じる
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            閉じる
-          </button>
         </div>
       </div>
     </div>
